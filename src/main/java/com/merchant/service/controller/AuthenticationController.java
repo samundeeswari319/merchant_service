@@ -52,28 +52,29 @@ public class AuthenticationController {
 
         APIResponse apiResponse = new APIResponse();
 
-        if(accumulatedData.isEmpty()){
-            accumulatedData.putAll(fieldRequestModel.json);
-        }else{
+        try{
+            for (Map.Entry<String, Object> entry : fieldRequestModel.json.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+
+                // If the value is null, it means the user wants to remove the key
+                if (value == null) {
+                    accumulatedData.remove(key);
+                } else {
+                    // Otherwise, add or update the key in the accumulated data
+                    accumulatedData.put(key, value);
+                }
+            }
+
             accumulatedData.forEach((key, value) -> {
                 if(!fieldRequestModel.json.containsKey(key)) {
                     accumulatedData.remove(key);
                 }
             });
+        }catch (Exception e){
+            apiResponse = showError(e.getMessage(), StatusCode.INTERNAL_SERVER_ERROR.code);
         }
 
-        for (Map.Entry<String, Object> entry : fieldRequestModel.json.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-
-            // If the value is null, it means the user wants to remove the key
-            if (value == null) {
-                accumulatedData.remove(key);
-            } else {
-                // Otherwise, add or update the key in the accumulated data
-                accumulatedData.put(key, value);
-            }
-        }
        // accumulatedData.putAll(test.json);
         try {
             String jsonString = objectMapper.writeValueAsString(accumulatedData);
@@ -146,10 +147,9 @@ public class AuthenticationController {
                                 merchants.setId(id);
                                 merchants.setMid(authentications.merchant_id);
                                 merchants.setUser_register_data(jsonString);
+                                merchants.setApp_id(Collections.singletonList(fieldRequestModel.getApp_id()));
+                                merchants.setApp_name(fieldRequestModel.getApp_name());
                                 merchants.setCreated_date(nowIst);
-                                merchants.setApp_id(Collections.singletonList(fieldRequestModel.app_id));
-                                merchants.setApp_name(fieldRequestModel.app_name);
-                                merchantRepository.save(merchants);
                             }else{
                                 merchants.setMid(merchants.getMid());
                                 merchants.setCreated_date(merchants.getCreated_date());
@@ -161,6 +161,7 @@ public class AuthenticationController {
                             }
                             merchantRepository.save(merchants);
                             apiResponse.setStatus(true);
+                            apiResponse.setData(merchants);
                             apiResponse.setMsg("Merchant requirements updated successfully.");
                         }catch (Exception e) {
                             apiResponse.setStatus(false);
@@ -186,20 +187,6 @@ public class AuthenticationController {
         return apiResponse;
     }
 
-
-    private Merchant updateMerchant(MerchantDTO merchantDTO) {
-        String authToken;
-        Merchant model = new Merchant();
-        long id = sequenceGeneratorService.generateSequence(Merchant.SEQUENCE_NAME);
-        model.setId(id);
-        model.setUser_register_data(null);
-        model.setMobile_number(merchantDTO.getMobile_number());
-        model.setName(merchantDTO.getName());
-        model.setApp_name(merchantDTO.getApp_name());
-        model.setMid(String.valueOf(id));
-        model.setApp_id(Collections.singletonList(merchantDTO.app_id));
-        return model;
-    }
 
 
     public APIResponse showError(String errorMsg, Integer code) {
