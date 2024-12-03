@@ -9,6 +9,7 @@ import com.merchant.service.enumclass.ErrorCode;
 import com.merchant.service.enumclass.StatusCode;
 import com.merchant.service.model.FieldRequestModel;
 import com.merchant.service.model.Merchant;
+import com.merchant.service.model.MerchantDTO;
 import com.merchant.service.repository.AuthenticationRepository;
 import com.merchant.service.repository.MerchantRepository;
 import com.merchant.service.services.MerchantService;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,6 +51,17 @@ public class AuthenticationController {
     public APIResponse updateSelectedFields(@RequestBody FieldRequestModel fieldRequestModel) {
 
         APIResponse apiResponse = new APIResponse();
+
+        if(accumulatedData.isEmpty()){
+            accumulatedData.putAll(fieldRequestModel.json);
+        }else{
+            accumulatedData.forEach((key, value) -> {
+                if(!fieldRequestModel.json.containsKey(key)) {
+                    accumulatedData.remove(key);
+                }
+            });
+        }
+
         for (Map.Entry<String, Object> entry : fieldRequestModel.json.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
@@ -72,7 +85,6 @@ public class AuthenticationController {
         return apiResponse;
     }
 
-
     @PostMapping("/edit_selected_fields")
     public APIResponse updateMerchant(@RequestBody Map<String, Object> updatedModel) throws JsonProcessingException {
         Object jsonRequirements = updatedModel.get("user_service_data");
@@ -87,7 +99,7 @@ public class AuthenticationController {
             response.setError(null);
             return response;
         }else{
-            merchant.setUser_service_data(jsonRequirementsString);
+            merchant.setUser_register_data(jsonRequirementsString);
             return merchantService.updateMerchant(merchant);
         }
     }
@@ -98,22 +110,22 @@ public class AuthenticationController {
         return merchantService.deleteMerchantKey(mid, key);
     }
 
-    public APIResponse getAuth(FieldRequestModel test, String jsonString) {
+    public APIResponse getAuth(FieldRequestModel fieldRequestModel, String jsonString) {
         APIResponse apiResponse = new APIResponse();
         Merchant merchant = new Merchant();
        // String authToken = extractTokenFromHeader(token);
         // String remoteIP = request.getRemoteAddr();
 
-        if (test.token.isEmpty() || test.token == null) {
+        if (fieldRequestModel.token.isEmpty() || fieldRequestModel.token == null) {
             apiResponse = showError("Invalid authentication", StatusCode.INTERNAL_SERVER_ERROR.code);
         }
         try {
-            fileWrite("authenticationRepository",new Gson().toJson(authenticationRepository.findByMerchantId(test.merchant_id)));
+            fileWrite("authenticationRepository",new Gson().toJson(authenticationRepository.findByMerchantId(fieldRequestModel.merchant_id)));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         try{
-            Authentication authentications = authenticationRepository.findByMerchantId(test.merchant_id);
+            Authentication authentications = authenticationRepository.findByMerchantId(fieldRequestModel.merchant_id);
             try {
                 String aa = new Gson().toJson(authentications);
                 fileWrite("authentications",aa);
@@ -123,8 +135,8 @@ public class AuthenticationController {
             if (authentications == null) {
                 apiResponse = showError("Authentication Error", StatusCode.FAILURE.code);
             } else {
-                if (authentications.token.equals(test.token)) {
-                    if (/*authentications.is_service*/authentications.payin_status.equals("1")) {
+                if (authentications.token.equals(fieldRequestModel.token)) {
+                    if (/*authentications.is_service*/authentications.payin_status != null && authentications.payin_status.equals("1")) {
                         LocalDateTime nowIst = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
                         try {
                             Merchant merchants = merchantRepository.findByMid(authentications.merchant_id);
@@ -133,14 +145,18 @@ public class AuthenticationController {
                                 long id = sequenceGeneratorService.generateSequence(Merchant.SEQUENCE_NAME);
                                 merchants.setId(id);
                                 merchants.setMid(authentications.merchant_id);
-                                merchants.setUser_service_data(jsonString);
+                                merchants.setUser_register_data(jsonString);
                                 merchants.setCreated_date(nowIst);
+                                merchants.setApp_id(Collections.singletonList(fieldRequestModel.app_id));
+                                merchants.setApp_name(fieldRequestModel.app_name);
                                 merchantRepository.save(merchants);
                             }else{
                                 merchants.setMid(merchants.getMid());
                                 merchants.setCreated_date(merchants.getCreated_date());
                                 merchants.setId(merchants.getId());
-                                merchants.setUser_service_data(jsonString);
+                                merchants.setApp_id(merchants.getApp_id());
+                                merchants.setApp_name(merchants.getApp_name());
+                                merchants.setUser_register_data(jsonString);
                                 merchants.setUpdated_date(nowIst);
                             }
                             merchantRepository.save(merchants);
@@ -168,6 +184,21 @@ public class AuthenticationController {
         }*/
 
         return apiResponse;
+    }
+
+
+    private Merchant updateMerchant(MerchantDTO merchantDTO) {
+        String authToken;
+        Merchant model = new Merchant();
+        long id = sequenceGeneratorService.generateSequence(Merchant.SEQUENCE_NAME);
+        model.setId(id);
+        model.setUser_register_data(null);
+        model.setMobile_number(merchantDTO.getMobile_number());
+        model.setName(merchantDTO.getName());
+        model.setApp_name(merchantDTO.getApp_name());
+        model.setMid(String.valueOf(id));
+        model.setApp_id(Collections.singletonList(merchantDTO.app_id));
+        return model;
     }
 
 

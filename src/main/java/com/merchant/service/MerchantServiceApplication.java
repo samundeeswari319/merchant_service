@@ -8,7 +8,7 @@ import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 @EnableJpaRepositories(
-		basePackages = "com.merchant.register.repository" // Replace with your JPA repository packag
+		basePackages = "com.merchant.service.repository" // Replace with your JPA repository packag
 )
 public class MerchantServiceApplication {
 	@Bean

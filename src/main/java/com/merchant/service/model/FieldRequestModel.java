@@ -11,6 +11,8 @@ public class FieldRequestModel {
     public String token;
     public String merchant_id;
     public Map<String, Object> json;
+    public String app_id;
+    public String app_name;
 
     public String getToken() {
         return token;
@@ -34,5 +36,21 @@ public class FieldRequestModel {
 
     public void setJson(Map<String, Object> json) {
         this.json = json;
+    }
+
+    public String getApp_id() {
+        return app_id;
+    }
+
+    public void setApp_id(String app_id) {
+        this.app_id = app_id;
+    }
+
+    public String getApp_name() {
+        return app_name;
+    }
+
+    public void setApp_name(String app_name) {
+        this.app_name = app_name;
     }
 }
