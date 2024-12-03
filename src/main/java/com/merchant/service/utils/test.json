@@ -1,0 +1,65 @@
+{
+  "name": {
+    "param_name": "name",
+    "is_mandatory": true
+  },
+  "email": {
+    "param_name": "email",
+    "is_mandatory": true,
+    "is_otp": true
+  },
+  "mobile_number": {
+    "param_name": "mobile_number",
+    "is_mandatory": true,
+    "is_otp": true
+  },
+  "kyc": {
+    "param_name": "kyc",
+    "is_mandatory": true,
+    "is_otp": true,
+    "kycInputParams": {
+      "paramInfo": [
+        {
+          "paramName": "Aadhaar Number",
+          "dataType": "NUMERIC",
+          "isOptional": "true",
+          "minLength": "1",
+          "maxLength": "8",
+          "regEx": "^[0-9]{1,8}$",
+          "visibility": "true"
+        },
+        {
+          "paramName": "Distributor ID",
+          "dataType": "NUMERIC",
+          "isOptional": "true",
+          "minLength": "8",
+          "maxLength": "8",
+          "regEx": "^[0-9]{8}$",
+          "visibility": "true"
+        },
+        {
+          "paramName": "Mobile Number",
+          "dataType": "NUMERIC",
+          "isOptional": "true",
+          "minLength": "10",
+          "maxLength": "10",
+          "regEx": "^[0-9]{10}$",
+          "visibility": "true"
+        },
+        {
+          "paramName": "Unique Consumer ID",
+          "dataType": "NUMERIC",
+          "isOptional": "true",
+          "minLength": "17",
+          "maxLength": "17",
+          "regEx": "^[2][0-9]{16}$",
+          "visibility": "true"
+        }
+      ]
+    }
+  },
+  "CD1": {
+    "param_name": "Consumer_ID",
+    "is_mandatory": true
+  }
+}
