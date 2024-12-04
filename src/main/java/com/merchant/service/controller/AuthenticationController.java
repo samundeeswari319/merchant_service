@@ -117,22 +117,12 @@ public class AuthenticationController {
        // String authToken = extractTokenFromHeader(token);
         // String remoteIP = request.getRemoteAddr();
 
-        if (fieldRequestModel.token.isEmpty() || fieldRequestModel.token == null) {
+        if (fieldRequestModel.token == null || fieldRequestModel.token.isEmpty() || fieldRequestModel.merchant_id == null || !fieldRequestModel.merchant_id.isEmpty()) {
             apiResponse = showError("Invalid authentication", StatusCode.INTERNAL_SERVER_ERROR.code);
         }
-        try {
-            fileWrite("authenticationRepository",new Gson().toJson(authenticationRepository.findByMerchantId(fieldRequestModel.merchant_id)));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
         try{
             Authentication authentications = authenticationRepository.findByMerchantId(fieldRequestModel.merchant_id);
-            try {
-                String aa = new Gson().toJson(authentications);
-                fileWrite("authentications",aa);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
             if (authentications == null) {
                 apiResponse = showError("Authentication Error", StatusCode.FAILURE.code);
             } else {

@@ -212,9 +212,7 @@ public class MerchantController {
             // Extract token from header
             token= authorizationHeader.substring(7); // Remove "Bearer " prefix
         } else{
-            apiResponse.setStatus(false);
-            apiResponse.setCode(HttpStatus.FORBIDDEN.value());
-            apiResponse.setData("Invalid Token");
+            apiResponse = showError("Invalid Token",HttpStatus.FORBIDDEN.value(),null);
             return apiResponse;
         }
         Authentication authentications = authenticationRepository.findByToken(token);
@@ -227,9 +225,7 @@ public class MerchantController {
                     Map<String, Object> requirements = objectMapper.readValue(merchant.user_register_data, new TypeReference<Map<String, Object>>() {
                     });
                     if (requirements == null || requirements.isEmpty()) {
-                        apiResponse.setStatus(false);
-                        apiResponse.setData(new ErrorResponses(ErrorCode.CONFIGURATION_FAILED));
-                        apiResponse.setCode(StatusCode.FAILURE.code);
+                        apiResponse = showError(new ErrorResponses(ErrorCode.CONFIGURATION_FAILED),StatusCode.FAILURE.code,null);
                     } else {
                         requirements.forEach((key, value) -> {
                             Object nameObject = requirements.get(key);
@@ -252,46 +248,12 @@ public class MerchantController {
                                     }else{
                                         errors.add(ErrorCode.RESOURCE_NOT_FOUND.message);
                                     }
-                                    /*if (register.containsKey(key) || !register.get(key).equals("")) {
-                                        db_requirement.put(key, register.get(key));
-                                        if(nameMap.get("is_otp") != null){
-                                            boolean isOtp = (boolean) nameMap.get("is_otp");
-                                            if(isOtp){
-                                                user.setSend_otp("0");
-                                                user.setLast_verification_id("0");
-                                            }
-                                        }
-                                    }else{
-                                        errors.add(ErrorCode.RESOURCE_NOT_FOUND.message);
-                                    }*/
                                 }else{
                                     if (register.containsKey(key)){
                                         db_requirement.put(key, register.get(key));
                                     }
                                 }
                             }
-
-                            /*if (register.containsKey(key)) {
-
-                                db_requirement.put(key, register.get(key));
-                                // Check if it's a Map and cast
-                                if (nameObject instanceof Map) {
-                                    Map<String, Object> nameMap = (Map<String, Object>) nameObject;
-                                    boolean isMandatory = (boolean) nameMap.get("is_mandatory");
-                                    if (isMandatory && register.get(key).equals("")) {
-                                        errors.add(ErrorCode.RESOURCE_NOT_FOUND.message);
-                                    }
-                                    if(nameMap.get("is_otp") != null){
-                                        boolean isOtp = (boolean) nameMap.get("is_otp");
-                                        if(isOtp){
-                                            user.setSend_otp("0");
-                                            user.setLast_verification_id("0");
-                                        }
-                                    }
-                                }
-                            } else {
-                                errors.add(ErrorCode.RESOURCE_NOT_FOUND.message);
-                            }*/
                         });
                     }
                     if (register.containsKey("app_id")) {
@@ -307,10 +269,7 @@ public class MerchantController {
                     if (errors.isEmpty()) {
                         User userDB= userRepository.findByMobileNumberAndAppId(String.valueOf(register.get("mobile_number")),app_id);
                         if(userDB != null){
-                            apiResponse.setMsg("Already Registered!!");
-                            apiResponse.setStatus(false);
-                            apiResponse.setData(errors);
-                            apiResponse.setCode(StatusCode.FAILURE.code);
+                            apiResponse = showError(errors,StatusCode.FAILURE.code,"Already Registered!!");
                         }else{
                             long id = sequenceGeneratorService.generateSequence(Merchant.SEQUENCE_NAME);
                             user.setId(id);
@@ -328,27 +287,27 @@ public class MerchantController {
                             apiResponse.setCode(StatusCode.SUCCESS.code);
                         }
                     } else {
-                        apiResponse.setStatus(false);
-                        apiResponse.setData(errors);
-                        apiResponse.setCode(StatusCode.INTERNAL_SERVER_ERROR.code);
+                        apiResponse = showError(errors,StatusCode.INTERNAL_SERVER_ERROR.code,"Register Error!!");
                     }
                 } catch (Exception e) {
-                    apiResponse.setMsg(e.getMessage());
-                    apiResponse.setStatus(false);
-                    apiResponse.setData(errors);
-                    apiResponse.setCode(StatusCode.INTERNAL_SERVER_ERROR.code);
+                    apiResponse = showError(errors,StatusCode.INTERNAL_SERVER_ERROR.code,e.getMessage());
                 }
             } else {
-                apiResponse.setMsg("Merchant Not found");
-                apiResponse.setStatus(false);
-                apiResponse.setData(new ErrorResponses(ErrorCode.INVALID_AUTHENTICATION));
-                apiResponse.setCode(StatusCode.FORBIDDEN.code);
+                apiResponse = showError(new ErrorResponses(ErrorCode.INVALID_AUTHENTICATION),StatusCode.FORBIDDEN.code,"Merchant Not found");
             }
         }else{
-            apiResponse.setStatus(false);
-            apiResponse.setCode(HttpStatus.FORBIDDEN.value());
-            apiResponse.setData("Invalid Token");
+           apiResponse =  showError("Invalid Token",HttpStatus.FORBIDDEN.value(),null);
         }
+        return apiResponse;
+    }
+
+
+    private APIResponse showError(Object data,Integer code,String message){
+        APIResponse apiResponse = new APIResponse();
+        apiResponse.setMsg(message);
+        apiResponse.setStatus(false);
+        apiResponse.setCode(code);
+        apiResponse.setData(data);
         return apiResponse;
     }
 }
