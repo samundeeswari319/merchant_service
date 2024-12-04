@@ -54,7 +54,7 @@ public class MerchantController {
     @Autowired
     private AuthenticationRepository authenticationRepository;
 
-    @PostMapping("/login/auth/create_merchant")
+    /*@PostMapping("/login/auth/create_merchant")
     public APIResponse createMerchant(@RequestBody MerchantDTO model) {
         APIResponse response = new APIResponse();
 
@@ -65,22 +65,22 @@ public class MerchantController {
                 response.setCode(StatusCode.INTERNAL_SERVER_ERROR.code);
                 return response;
             }
-            /*if (model.getMerchant_id() == null || model.getMerchant_id().isEmpty()) {
+            *//*if (model.getMerchant_id() == null || model.getMerchant_id().isEmpty()) {
                 response.setStatus(false);
                 response.setCode(400);
                 response.setData(null);
                 response.setError(ErrorCode.INVALID_MERCHANT.code);
                 response.setMsg("Merchant ID cannot be null or empty.");
                 return response;
-            }*/
-           /* if (merchantRepository.findByMid(model.getMerchant_id()) != null) {
+            }*//*
+           *//* if (merchantRepository.findByMid(model.getMerchant_id()) != null) {
                 response.setStatus(false);
                 response.setCode(400);
                 response.setData(null);
                 response.setError(ErrorCode.MERCHANT_DUPLICATE.code);
                 response.setMsg("Duplicate merchant ID.");
                 return response;
-            }*/
+            }*//*
             Merchant merchant = updateMerchant(model);
             Merchant savedModel = merchantRepository.save(merchant);
             response.setStatus(true);
@@ -194,7 +194,7 @@ public class MerchantController {
             return response;
         }
         return merchantService.updateSelectedFields(test.merchant_id, file);
-    }
+    }*/
 
 
     // USER REGISTER FLOW

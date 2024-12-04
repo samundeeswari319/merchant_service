@@ -2,6 +2,7 @@ package com.merchant.service.controller;
 
 import com.merchant.service.common.APIResponse;
 import com.merchant.service.enumclass.ErrorCode;
+import com.merchant.service.enumclass.StatusCode;
 import com.merchant.service.model.User;
 import com.merchant.service.model.UserFetchRequest;
 import com.merchant.service.model.VerifyOtpRequest;
@@ -69,11 +70,9 @@ public class UserController {
                 response.setPageData(userPage.getNumberOfElements());
             }
         } catch (Exception e) {
-            e.printStackTrace();
             response.setStatus(false);
-            response.setCode(500);
-            response.setData(null);
-            response.setError(ErrorCode.INTERNAL_SERVER_ERROR);
+            response.setCode(StatusCode.INTERNAL_SERVER_ERROR.code);
+            response.setData(e.getMessage());
             response.setMsg("An error occurred while fetching user data.");
         }
 
