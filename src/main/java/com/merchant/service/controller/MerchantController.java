@@ -199,6 +199,7 @@ public class MerchantController {
     @PostMapping("/api/register_user")
     private APIResponse userRegister(HttpServletRequest request, @RequestBody HashMap<String, Object> register) throws IOException {
         String token = "";
+        String app_id = "";
         String authorizationHeader = request.getHeader("Authorization");
         APIResponse apiResponse = new APIResponse();
         //String midL = register.get("mid").toString();
@@ -235,7 +236,9 @@ public class MerchantController {
                                 Map<String, Object> nameMap = (Map<String, Object>) nameObject;
                                 boolean isMandatory = (boolean) nameMap.get("is_mandatory");
                                 if(isMandatory){
-                                    if (register.containsKey(key) || !register.get(key).equals("")) {
+                                    if(!register.containsKey(key)){
+                                        errors.add(ErrorCode.RESOURCE_NOT_FOUND.message);
+                                    } else if (!register.get(key).equals("")) {
                                         db_requirement.put(key, register.get(key));
                                         if(nameMap.get("is_otp") != null){
                                             boolean isOtp = (boolean) nameMap.get("is_otp");
@@ -247,6 +250,18 @@ public class MerchantController {
                                     }else{
                                         errors.add(ErrorCode.RESOURCE_NOT_FOUND.message);
                                     }
+                                    /*if (register.containsKey(key) || !register.get(key).equals("")) {
+                                        db_requirement.put(key, register.get(key));
+                                        if(nameMap.get("is_otp") != null){
+                                            boolean isOtp = (boolean) nameMap.get("is_otp");
+                                            if(isOtp){
+                                                user.setSend_otp("0");
+                                                user.setLast_verification_id("0");
+                                            }
+                                        }
+                                    }else{
+                                        errors.add(ErrorCode.RESOURCE_NOT_FOUND.message);
+                                    }*/
                                 }else{
                                     if (register.containsKey(key)){
                                         db_requirement.put(key, register.get(key));
@@ -278,24 +293,37 @@ public class MerchantController {
                         });
                     }
                     if (register.containsKey("app_id")) {
-                        user.setApp_id(String.valueOf(register.get("app_id")));
+                        if(merchant.getApp_id().contains(String.valueOf(register.get("app_id")))){
+                            app_id = String.valueOf(register.get("app_id"));
+                            user.setApp_id(String.valueOf(register.get("app_id")));
+                        }else{
+                            errors.add(ErrorCode.INVALID_ID.message);
+                        }
                     } else {
                         errors.add(ErrorCode.RESOURCE_NOT_FOUND.message);
                     }
                     if (errors.isEmpty()) {
-                        long id = sequenceGeneratorService.generateSequence(Merchant.SEQUENCE_NAME);
-                        user.setId(id);
-                        user.setMid(merchant.mid);
-                        user.setUser_id(id);
-                        user.setApp_name(merchant.getApp_name());
-                        //authToken = jwtUtils.createToken(model);
-                        LocalDateTime nowIst = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
-                        user.setCreated_date(nowIst);
-                        user.user_details = db_requirement;
-                        userRepository.save(user);
-                        apiResponse.setStatus(true);
-                        apiResponse.setData(user);
-                        apiResponse.setCode(StatusCode.SUCCESS.code);
+                        User userDB= userRepository.findByMobileNumberAndAppId(String.valueOf(register.get("mobile_number")),app_id);
+                        if(userDB != null){
+                            apiResponse.setMsg("Already Registered!!");
+                            apiResponse.setStatus(false);
+                            apiResponse.setData(errors);
+                            apiResponse.setCode(StatusCode.FAILURE.code);
+                        }else{
+                            long id = sequenceGeneratorService.generateSequence(Merchant.SEQUENCE_NAME);
+                            user.setId(id);
+                            user.setMid(merchant.mid);
+                            user.setUser_id(id);
+                            user.setApp_name(merchant.getApp_name());
+                            //authToken = jwtUtils.createToken(model);
+                            LocalDateTime nowIst = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
+                            user.setCreated_date(nowIst);
+                            user.user_details = db_requirement;
+                            userRepository.save(user);
+                            apiResponse.setStatus(true);
+                            apiResponse.setData(user);
+                            apiResponse.setCode(StatusCode.SUCCESS.code);
+                        }
                     } else {
                         apiResponse.setStatus(false);
                         apiResponse.setData(new ErrorResponses(ErrorCode.RESOURCE_NOT_FOUND));

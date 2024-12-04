@@ -16,7 +16,7 @@ public enum ErrorCode {
     INVALID_AADHAR("ER-1013", "Invalid input value"),
     INVALID_MOBILE_NUMBER("ER-1014", "Invalid input value"),
     REF_NUM_ALREADY_EXISTS("ER-1015", "Req id already exists"),
-    INVALID_DOB_LIC("ER-1016", "Invalid Request"),
+    INVALID_ID("ER-1016", "Invalid Request"),
     OPERATOR_NOT_FOUND("ER-1017", "Invalid Request"),
     USER_NOT_FOUND("ER-1018", "Invalid Request"),
     OTP_NOT_SEND("ER-1019", "Invalid Request"),

@@ -19,6 +19,9 @@ public interface UserRepository extends MongoRepository<User, String> {
     @Query("{ 'user_id': ?0 }")
     User findByUserId(String user_id);
 
+    @Query("{ 'mobile_number': ?0,'app_id': ?1 }")
+    User findByMobileNumberAndAppId(String mobile_number,String app_id);
+
     @Query("{ 'mobile_number': ?0 }")
     User findByMobileNumber(String mobile_number);
 }

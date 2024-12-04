@@ -150,6 +150,7 @@ public class AuthenticationController {
                                 merchants.setApp_id(Collections.singletonList(fieldRequestModel.getApp_id()));
                                 merchants.setApp_name(fieldRequestModel.getApp_name());
                                 merchants.setCreated_date(nowIst);
+                                merchants.setUpdated_date(nowIst);
                             }else{
                                 merchants.setMid(merchants.getMid());
                                 merchants.setCreated_date(merchants.getCreated_date());
