@@ -3,6 +3,7 @@ package com.merchant.service.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.merchant.service.common.APIResponse;
 import com.merchant.service.common.ErrorResponses;
 import com.merchant.service.config.JwtUtils;
@@ -16,6 +17,7 @@ import com.merchant.service.repository.UserRegisterRepo;
 import com.merchant.service.repository.UserRepository;
 import com.merchant.service.services.MerchantService;
 import com.merchant.service.services.SequenceGeneratorService;
+import com.merchant.service.utils.Utils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -318,6 +320,7 @@ public class MerchantController {
                             //authToken = jwtUtils.createToken(model);
                             LocalDateTime nowIst = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
                             user.setCreated_date(nowIst);
+                            user.setUpdated_date(nowIst);
                             user.user_details = db_requirement;
                             userRepository.save(user);
                             apiResponse.setStatus(true);
@@ -326,7 +329,7 @@ public class MerchantController {
                         }
                     } else {
                         apiResponse.setStatus(false);
-                        apiResponse.setData(new ErrorResponses(ErrorCode.RESOURCE_NOT_FOUND));
+                        apiResponse.setData(errors);
                         apiResponse.setCode(StatusCode.INTERNAL_SERVER_ERROR.code);
                     }
                 } catch (Exception e) {
