@@ -27,13 +27,13 @@ public class Merchant {
 
     @Id
     public long id;
-    public String name;
+   // public String name;
     public String mid;
     @JsonSerialize(using = JsonRequirementsSerializer.class)
     @JsonDeserialize(using = JsonRequirementsDeserializer.class)
     public String user_register_data;
-    private String mobile_number;
-    private String token;
+    //private String mobile_number;
+    //private String token;
     private List<String> app_id;
     private String app_name;
     @CreatedDate
@@ -47,14 +47,6 @@ public class Merchant {
 
     public void setId(long id) {
         this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public String getMid() {
@@ -73,22 +65,6 @@ public class Merchant {
         this.app_id = app_id;
     }
 
-    public String getMobile_number() {
-        return mobile_number;
-    }
-
-    public void setMobile_number(String mobile_number) {
-        this.mobile_number = mobile_number;
-    }
-
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
 
     public String getUser_register_data() {
         return user_register_data;

@@ -60,4 +60,19 @@ public class Utils {
         fileService.writeToFile(filename, currentDate + "\t" +
                 "response :: " + "\t" + response);
     }
+
+    public static boolean validateEmail(String email) {
+        String emailPattern = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,3}$";
+        return email.matches(emailPattern); // true if valid, false if invalid
+    }
+    public static boolean validateMobileInput(String data) {
+        return data.matches("\\d{10}");
+    }
+    public static boolean validateIntegerInput(String data) {
+        return data.matches(".*[^0-9].*");
+    }
+
+    public static boolean validateText(String data) {
+        return data.matches("^[a-zA-Z ]*$");
+    }
 }

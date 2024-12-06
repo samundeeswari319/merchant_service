@@ -8,19 +8,10 @@ import java.util.Map;
 @Getter
 @Setter
 public class FieldRequestModel {
-    public String token;
     public String merchant_id;
     public Map<String, Object> json;
     public String app_id;
     public String app_name;
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
 
     public String getMerchant_id() {
         return merchant_id;

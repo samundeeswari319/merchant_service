@@ -14,7 +14,9 @@ import com.merchant.service.repository.AuthenticationRepository;
 import com.merchant.service.repository.MerchantRepository;
 import com.merchant.service.services.MerchantService;
 import com.merchant.service.services.SequenceGeneratorService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -48,9 +50,18 @@ public class AuthenticationController {
 
     //MERCHANT JSON FILE UPLOAD FLOW
     @PostMapping("/selected_fields")
-    public APIResponse updateSelectedFields(@RequestBody FieldRequestModel fieldRequestModel) {
-
+    public APIResponse updateSelectedFields(HttpServletRequest request, @RequestBody FieldRequestModel fieldRequestModel) {
+        String token = "";
         APIResponse apiResponse = new APIResponse();
+        String authorizationHeader = request.getHeader("Authorization");
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            // Extract token from header
+            token= authorizationHeader.substring(7); // Remove "Bearer " prefix
+        } else{
+            apiResponse = showError("Invalid Token", HttpStatus.FORBIDDEN.value());
+            return apiResponse;
+        }
+
 
         try{
             for (Map.Entry<String, Object> entry : fieldRequestModel.json.entrySet()) {
@@ -75,10 +86,9 @@ public class AuthenticationController {
             apiResponse = showError(e.getMessage(), StatusCode.INTERNAL_SERVER_ERROR.code);
         }
 
-       // accumulatedData.putAll(test.json);
         try {
             String jsonString = objectMapper.writeValueAsString(accumulatedData);
-            apiResponse = getAuth(fieldRequestModel,jsonString);
+            apiResponse = getAuth(token,fieldRequestModel,jsonString);
         } catch (JsonProcessingException e) {
             apiResponse = showError(e.getMessage(), StatusCode.INTERNAL_SERVER_ERROR.code);
         }
@@ -86,7 +96,7 @@ public class AuthenticationController {
         return apiResponse;
     }
 
-    @PostMapping("/edit_selected_fields")
+  /*  @PostMapping("/edit_selected_fields")
     public APIResponse updateMerchant(@RequestBody Map<String, Object> updatedModel) throws JsonProcessingException {
         Object jsonRequirements = updatedModel.get("user_service_data");
         String jsonRequirementsString = new ObjectMapper().writeValueAsString(jsonRequirements);
@@ -103,21 +113,21 @@ public class AuthenticationController {
             merchant.setUser_register_data(jsonRequirementsString);
             return merchantService.updateMerchant(merchant);
         }
-    }
+    }*/
 
 
-    @PostMapping("/delete_selected_fields")
+  /*  @PostMapping("/delete_selected_fields")
     public APIResponse deleteMerchantKey(@RequestParam String key, @RequestParam String mid) {
         return merchantService.deleteMerchantKey(mid, key);
-    }
+    }*/
 
-    public APIResponse getAuth(FieldRequestModel fieldRequestModel, String jsonString) {
+    public APIResponse getAuth(String token,FieldRequestModel fieldRequestModel, String jsonString) {
         APIResponse apiResponse = new APIResponse();
         Merchant merchant = new Merchant();
        // String authToken = extractTokenFromHeader(token);
         // String remoteIP = request.getRemoteAddr();
 
-        if (fieldRequestModel.token == null || fieldRequestModel.token.isEmpty() || fieldRequestModel.merchant_id == null || !fieldRequestModel.merchant_id.isEmpty()) {
+        if (token == null || token.isEmpty() || fieldRequestModel.merchant_id == null || !fieldRequestModel.merchant_id.isEmpty()) {
             apiResponse = showError("Invalid authentication", StatusCode.INTERNAL_SERVER_ERROR.code);
         }
 
@@ -126,7 +136,7 @@ public class AuthenticationController {
             if (authentications == null) {
                 apiResponse = showError("Authentication Error", StatusCode.FAILURE.code);
             } else {
-                if (authentications.token.equals(fieldRequestModel.token)) {
+                if (authentications.token.equals(token)) {
                     if (/*authentications.is_service*/authentications.payin_status != null && authentications.payin_status.equals("1")) {
                         LocalDateTime nowIst = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
                         try {

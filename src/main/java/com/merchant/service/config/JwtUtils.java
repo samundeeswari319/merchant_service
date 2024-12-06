@@ -38,7 +38,7 @@ public class JwtUtils {
     public String createToken(Merchant merchant) {
         Claims claims = Jwts.claims();
 
-        claims.put("mobile", merchant.getMobile_number().toString());
+        //claims.put("mobile", merchant.getMobile_number().toString());
         claims.put("user_id", ""+merchant.getId());
 
         Date tokenCreateTime = new Date();

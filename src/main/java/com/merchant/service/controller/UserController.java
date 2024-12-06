@@ -1,17 +1,22 @@
 package com.merchant.service.controller;
 
 import com.merchant.service.common.APIResponse;
+import com.merchant.service.common.ErrorResponses;
+import com.merchant.service.entity.Authentication;
 import com.merchant.service.enumclass.ErrorCode;
 import com.merchant.service.enumclass.StatusCode;
 import com.merchant.service.model.User;
 import com.merchant.service.model.UserFetchRequest;
 import com.merchant.service.model.VerifyOtpRequest;
+import com.merchant.service.repository.AuthenticationRepository;
 import com.merchant.service.repository.MerchantRepository;
 import com.merchant.service.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -22,42 +27,67 @@ import java.time.ZoneId;
 public class UserController {
 
     @Autowired
-    private MerchantRepository merchantRepository;
+     MerchantRepository merchantRepository;
 
     @Autowired
-    private UserRepository userRepository;
+     UserRepository userRepository;
+    @Autowired
+     AuthenticationRepository authenticationRepository;
 
-    @PostMapping("/get/user/data")
-    public APIResponse getUserData(@RequestBody UserFetchRequest request,
+    @PostMapping("/getUserList")
+    public APIResponse getUserData(HttpServletRequest httpServletRequest,@RequestBody UserFetchRequest request,
                                    @RequestParam(defaultValue = "0") int page,
                                    @RequestParam(defaultValue = "20") int size) {
         APIResponse response = new APIResponse();
+        String token = "";
+        String authorizationHeader = httpServletRequest.getHeader("Authorization");
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            // Extract token from header
+            token= authorizationHeader.substring(7); // Remove "Bearer " prefix
+        } else{
+            response = showError("Invalid Token", HttpStatus.FORBIDDEN.value());
+            return response;
+        }
 
         try {
             if (request.getMid() == null || request.getMid().isEmpty()) {
-                response.setStatus(false);
-                response.setCode(400);
-                response.setData(null);
-                response.setError(ErrorCode.SOMETHING_WENT_WRONG.message);
-                response.setMsg("MID is required to fetch data.");
+                response = showError(ErrorCode.RESOURCE_NOT_FOUND.message, StatusCode.INTERNAL_SERVER_ERROR.code);
                 return response;
             }
 
             Pageable pageable = PageRequest.of(page, size);
-            Page<User> userPage;
+            Page<User> userPage = null;
 
-            if (request.getApp_id() == null || request.getApp_id().isEmpty()) {
-                userPage = userRepository.findByMid(request.getMid(), pageable);
-            } else {
-                userPage = userRepository.findByMidAndAppId(request.getMid(), request.getApp_id(), pageable);
+            try {
+                Authentication authentications = authenticationRepository.findByMerchantId(request.getMid());
+                if (authentications == null) {
+                    response = showError("Authentication Error", StatusCode.FAILURE.code);
+                    return response;
+                } else {
+                    if (authentications.token.equals(token)) {
+                        if (request.getApp_id() == null || request.getApp_id().isEmpty()) {
+                            userPage = userRepository.findByMid(request.getMid(), pageable);
+                        } else {
+                            userPage = userRepository.findByMidAndAppId(request.getMid(), request.getApp_id(), pageable);
+                        }
+                    }else{
+                        response = showError("Authentication Error", StatusCode.FAILURE.code);
+                        return response;
+                    }
+                }
+            }catch (Exception e){
+                return  response = showError(e.getMessage(),StatusCode.FAILURE.code);
             }
 
-            if (userPage.isEmpty()) {
-                response.setStatus(false);
-                response.setCode(404);
+            if (userPage == null || userPage.isEmpty()) {
                 response.setData(null);
-                response.setError(ErrorCode.SOMETHING_WENT_WRONG.message);
-                response.setMsg("No data found for the provided MID and App ID.");
+                response.setStatus(false);
+                response.setMsg("No data for the selected criteria.");
+                response.setCode(StatusCode.SUCCESS.code);
+                ErrorResponses errorResponse = new ErrorResponses(ErrorCode.NO_DATA_FOUND);
+                errorResponse.additionalInfo.excepText = String.valueOf(ErrorCode.NO_DATA_FOUND);
+                response.setError(errorResponse);
+                return response;
             } else {
                 response.setStatus(true);
                 response.setCode(200);
@@ -70,10 +100,8 @@ public class UserController {
                 response.setPageData(userPage.getNumberOfElements());
             }
         } catch (Exception e) {
-            response.setStatus(false);
-            response.setCode(StatusCode.INTERNAL_SERVER_ERROR.code);
-            response.setData(e.getMessage());
-            response.setMsg("An error occurred while fetching user data.");
+            response = showError(e.getMessage(), StatusCode.INTERNAL_SERVER_ERROR.code);
+            return response;
         }
 
         return response;
@@ -81,7 +109,7 @@ public class UserController {
 
 
 
-    @PostMapping("/verify-otp")
+    @PostMapping("/verify_otp")
     public APIResponse verifyOtp(@RequestBody VerifyOtpRequest verifyOtpRequest) {
         APIResponse response = new APIResponse();
 
@@ -127,5 +155,14 @@ public class UserController {
             response.setMsg("An error occurred during OTP verification"+ " "+e.getMessage());
         }
         return response;
+    }
+
+    public APIResponse showError(String errorMsg, Integer code) {
+        APIResponse apiResponse = new APIResponse();
+        apiResponse.setStatus(false);
+        apiResponse.setData(null);
+        apiResponse.setMsg(errorMsg);
+        apiResponse.setCode(code);
+        return apiResponse;
     }
 }

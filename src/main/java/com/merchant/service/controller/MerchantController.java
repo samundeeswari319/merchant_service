@@ -1,9 +1,8 @@
 package com.merchant.service.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import com.merchant.service.common.APIResponse;
 import com.merchant.service.common.ErrorResponses;
 import com.merchant.service.config.JwtUtils;
@@ -21,9 +20,7 @@ import com.merchant.service.utils.Utils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -31,170 +28,17 @@ import java.time.ZoneId;
 import java.util.*;
 
 @RestController
-/*@RequestMapping("/v1/api")*/
 public class MerchantController {
 
-    @Autowired
-    UserRegisterRepo userRegisterRepo;
     @Autowired
     SequenceGeneratorService sequenceGeneratorService;
     @Autowired
     MerchantRepository merchantRepository;
     @Autowired
     UserRepository userRepository;
-    @Autowired
-    JwtUtils jwtUtils;
 
     @Autowired
-    AuthTokenModel authTokenModel;
-
-    @Autowired
-    private MerchantService merchantService;
-
-    @Autowired
-    private AuthenticationRepository authenticationRepository;
-
-    /*@PostMapping("/login/auth/create_merchant")
-    public APIResponse createMerchant(@RequestBody MerchantDTO model) {
-        APIResponse response = new APIResponse();
-
-        try {
-            if (model.getApp_id() == null || model.getApp_id().isEmpty() || model.getApp_name() == null) {
-                response.setStatus(false);
-                response.setData(new ErrorResponses(ErrorCode.RESOURCE_NOT_FOUND));
-                response.setCode(StatusCode.INTERNAL_SERVER_ERROR.code);
-                return response;
-            }
-            *//*if (model.getMerchant_id() == null || model.getMerchant_id().isEmpty()) {
-                response.setStatus(false);
-                response.setCode(400);
-                response.setData(null);
-                response.setError(ErrorCode.INVALID_MERCHANT.code);
-                response.setMsg("Merchant ID cannot be null or empty.");
-                return response;
-            }*//*
-           *//* if (merchantRepository.findByMid(model.getMerchant_id()) != null) {
-                response.setStatus(false);
-                response.setCode(400);
-                response.setData(null);
-                response.setError(ErrorCode.MERCHANT_DUPLICATE.code);
-                response.setMsg("Duplicate merchant ID.");
-                return response;
-            }*//*
-            Merchant merchant = updateMerchant(model);
-            Merchant savedModel = merchantRepository.save(merchant);
-            response.setStatus(true);
-            response.setCode(200);
-            response.setData(savedModel);
-            response.setError(null);
-            response.setMsg("Merchant created successfully.");
-
-        } catch (Exception e) {
-            response.setStatus(false);
-            response.setCode(500);
-            response.setData(null);
-            response.setError("Internal server error");
-            response.setMsg(e.getMessage());
-        }
-
-        return response;
-    }
-
-    private Merchant updateMerchant(MerchantDTO merchantDTO) {
-        String authToken;
-        Merchant model = new Merchant();
-        long id = sequenceGeneratorService.generateSequence(Merchant.SEQUENCE_NAME);
-        model.setId(id);
-        model.setUser_register_data(null);
-        model.setMobile_number(merchantDTO.getMobile_number());
-        model.setName(merchantDTO.getName());
-        model.setApp_name(merchantDTO.getApp_name());
-        authToken = jwtUtils.createToken(model);
-        model.setToken(authToken);
-        model.setMid(String.valueOf(id));
-        model.setApp_id(Collections.singletonList(merchantDTO.app_id));
-        return model;
-    }
-
-    @PostMapping("/add_register_data")
-    private APIResponse getUserRegisterData(@RequestBody UserRegisterData userRegisterData) throws IOException {
-        APIResponse apiResponse = new APIResponse();
-        userRegisterData.id = sequenceGeneratorService.generateSequence(UserRegisterData.SEQUENCE_NAME);
-        userRegisterRepo.save(userRegisterData);
-        apiResponse.setStatus(true);
-        apiResponse.setMsg("Success!!");
-        apiResponse.setData(userRegisterData);
-        return apiResponse;
-    }
-
-
-    @PostMapping("/edit_merchant")
-    public APIResponse updateMerchant(@RequestBody Map<String, Object> updatedModel) throws JsonProcessingException {
-        Object jsonRequirements = updatedModel.get("user_register_data");
-        String jsonRequirementsString = new ObjectMapper().writeValueAsString(jsonRequirements);
-        Merchant merchant = new Merchant();
-        merchant.setUser_register_data(jsonRequirementsString);
-        String userId = authTokenModel.getUser_id();
-        if (userId == null || userId.trim().isEmpty()) {
-            APIResponse response = new APIResponse();
-            response.setStatus(false);
-            response.setCode(400);
-            response.setMsg(ErrorCode.INVALID_USERID.code);
-            response.setError(null);
-            return response;
-        }
-
-        // return merchantService.updateMerchant(userId, merchant);
-        return merchantService.updateMerchant(merchant);
-    }
-
-
-    @PostMapping("/delete_merchant")
-    public ResponseEntity<APIResponse> deleteMerchantKey(@RequestParam String key) {
-        String userId = authTokenModel.getUser_id();
-        if (userId == null || userId.trim().isEmpty()) {
-            APIResponse response = new APIResponse();
-            response.setStatus(false);
-            response.setCode(400);
-            response.setMsg(ErrorCode.INVALID_USERID.code);
-            response.setError(null);
-            return ResponseEntity.badRequest().body(response);
-        }
-        APIResponse response = merchantService.deleteMerchantKey(userId, key);
-        return ResponseEntity.ok(response);
-    }
-
-
-    //for merchant to select fields in page
-    @PostMapping("/user_register_data")
-    private APIResponse showUserRequirements(@RequestHeader("Authorization") String token) {
-        APIResponse apiResponse = new APIResponse();
-        if (token != null) {
-            List<UserRegisterData> userRegisterData = userRegisterRepo.findAll();
-            UserRegisterData registerData = userRegisterData.get(0);
-            //registerData
-            apiResponse.setStatus(true);
-            apiResponse.setMsg("Success!!");
-            apiResponse.setCode(StatusCode.SUCCESS.code);
-            apiResponse.setData(registerData);
-        }
-        return apiResponse;
-    }
-
-    @PostMapping("/selected_fields")
-    public APIResponse updateSelectedFields(@RequestBody FieldRequestModel test,
-                                            @RequestParam("jsonFilepath") MultipartFile file) {
-        String userId = authTokenModel.getUser_id();
-        if (userId == null || userId.trim().isEmpty()) {
-            APIResponse response = new APIResponse();
-            response.setStatus(false);
-            response.setCode(400);
-            response.setMsg(ErrorCode.INVALID_USERID.code);
-            response.setError("INVALID_USER_ID");
-            return response;
-        }
-        return merchantService.updateSelectedFields(test.merchant_id, file);
-    }*/
+    AuthenticationRepository authenticationRepository;
 
 
     // USER REGISTER FLOW
@@ -210,9 +54,9 @@ public class MerchantController {
         User user = new User();
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             // Extract token from header
-            token= authorizationHeader.substring(7); // Remove "Bearer " prefix
-        } else{
-            apiResponse = showError("Invalid Token",HttpStatus.FORBIDDEN.value(),null);
+            token = authorizationHeader.substring(7); // Remove "Bearer " prefix
+        } else {
+            apiResponse = showError("Invalid Token", HttpStatus.FORBIDDEN.value(), null);
             return apiResponse;
         }
         Authentication authentications = authenticationRepository.findByToken(token);
@@ -225,7 +69,7 @@ public class MerchantController {
                     Map<String, Object> requirements = objectMapper.readValue(merchant.user_register_data, new TypeReference<Map<String, Object>>() {
                     });
                     if (requirements == null || requirements.isEmpty()) {
-                        apiResponse = showError(new ErrorResponses(ErrorCode.CONFIGURATION_FAILED),StatusCode.FAILURE.code,null);
+                        apiResponse = showError(new ErrorResponses(ErrorCode.CONFIGURATION_FAILED), StatusCode.FAILURE.code, null);
                     } else {
                         requirements.forEach((key, value) -> {
                             Object nameObject = requirements.get(key);
@@ -233,23 +77,44 @@ public class MerchantController {
                             if (nameObject instanceof Map) {
                                 Map<String, Object> nameMap = (Map<String, Object>) nameObject;
                                 boolean isMandatory = (boolean) nameMap.get("is_mandatory");
-                                if(isMandatory){
-                                    if(!register.containsKey(key)){
+                                if (isMandatory) {
+                                    if (!register.containsKey(key)) {
                                         errors.add(ErrorCode.RESOURCE_NOT_FOUND.message);
                                     } else if (!register.get(key).equals("")) {
-                                        db_requirement.put(key, register.get(key));
-                                        if(nameMap.get("is_otp") != null){
+                                        if (key.equals("email")) {
+                                            if (Utils.validateEmail(register.get(key).toString())) {
+                                                db_requirement.put(key, register.get(key));
+                                            } else {
+                                                errors.add(ErrorCode.INVALID_USERID.message);
+                                            }
+                                        }
+
+                                        if (key.equals("mobile_number")) {
+                                            if (Utils.validateMobileInput(register.get(key).toString())) {
+                                                db_requirement.put(key, register.get(key));
+                                            } else {
+                                                errors.add(ErrorCode.INVALID_USERID.message);
+                                            }
+                                        }
+                                        if (key.equals("name") || key.equals("gender")) {
+                                            if (Utils.validateText(register.get(key).toString())) {
+                                                db_requirement.put(key, register.get(key));
+                                            } else {
+                                                errors.add(ErrorCode.INVALID_USERID.message);
+                                            }
+                                        }
+                                        if (nameMap.get("is_otp") != null) {
                                             boolean isOtp = (boolean) nameMap.get("is_otp");
-                                            if(isOtp){
+                                            if (isOtp) {
                                                 user.setSend_otp("0");
                                                 user.setLast_verification_id("0");
                                             }
                                         }
-                                    }else{
+                                    } else {
                                         errors.add(ErrorCode.RESOURCE_NOT_FOUND.message);
                                     }
-                                }else{
-                                    if (register.containsKey(key)){
+                                } else {
+                                    if (register.containsKey(key)) {
                                         db_requirement.put(key, register.get(key));
                                     }
                                 }
@@ -257,20 +122,20 @@ public class MerchantController {
                         });
                     }
                     if (register.containsKey("app_id")) {
-                        if(merchant.getApp_id().contains(String.valueOf(register.get("app_id")))){
+                        if (merchant.getApp_id().contains(String.valueOf(register.get("app_id")))) {
                             app_id = String.valueOf(register.get("app_id"));
                             user.setApp_id(String.valueOf(register.get("app_id")));
-                        }else{
+                        } else {
                             errors.add(ErrorCode.INVALID_ID.message);
                         }
                     } else {
                         errors.add(ErrorCode.RESOURCE_NOT_FOUND.message);
                     }
                     if (errors.isEmpty()) {
-                        User userDB= userRepository.findByMobileNumberAndAppId(String.valueOf(register.get("mobile_number")),app_id);
-                        if(userDB != null){
-                            apiResponse = showError(errors,StatusCode.FAILURE.code,"Already Registered!!");
-                        }else{
+                        User userDB = userRepository.findByMobileNumberAndAppId(String.valueOf(register.get("mobile_number")), app_id);
+                        if (userDB != null) {
+                            apiResponse = showError(errors, StatusCode.FAILURE.code, "Already Registered!!");
+                        } else {
                             long id = sequenceGeneratorService.generateSequence(Merchant.SEQUENCE_NAME);
                             user.setId(id);
                             user.setMid(merchant.mid);
@@ -287,22 +152,22 @@ public class MerchantController {
                             apiResponse.setCode(StatusCode.SUCCESS.code);
                         }
                     } else {
-                        apiResponse = showError(errors,StatusCode.INTERNAL_SERVER_ERROR.code,"Register Error!!");
+                        apiResponse = showError(errors, StatusCode.INTERNAL_SERVER_ERROR.code, "Authentication Error");
                     }
                 } catch (Exception e) {
-                    apiResponse = showError(errors,StatusCode.INTERNAL_SERVER_ERROR.code,e.getMessage());
+                    apiResponse = showError(errors, StatusCode.INTERNAL_SERVER_ERROR.code, e.getMessage());
                 }
             } else {
-                apiResponse = showError(new ErrorResponses(ErrorCode.INVALID_AUTHENTICATION),StatusCode.FORBIDDEN.code,"Merchant Not found");
+                apiResponse = showError(new ErrorResponses(ErrorCode.INVALID_AUTHENTICATION), StatusCode.FORBIDDEN.code, "Merchant Not found");
             }
-        }else{
-           apiResponse =  showError("Invalid Token",HttpStatus.FORBIDDEN.value(),null);
+        } else {
+            apiResponse = showError("Invalid Token", HttpStatus.FORBIDDEN.value(), null);
         }
         return apiResponse;
     }
 
 
-    private APIResponse showError(Object data,Integer code,String message){
+    private APIResponse showError(Object data, Integer code, String message) {
         APIResponse apiResponse = new APIResponse();
         apiResponse.setMsg(message);
         apiResponse.setStatus(false);

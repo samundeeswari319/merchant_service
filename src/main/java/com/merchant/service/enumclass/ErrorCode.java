@@ -38,6 +38,7 @@ public enum ErrorCode {
     ACCOUNT_ALREADY_EXIST("ER-1033","Account Already Exist"),
     //NS00062
     NO_TRANSACTIONS_FOUND("ER-1030", "There are no transactions for the selected period."),
+    NO_DATA_FOUND("ER-1031", "There are no data for the given request."),
     INVALID_DATE_FORMAT("ER-1031", "Invalid date format. Please use dd-MM-yyyy."),
     MISSING_CUSTOM_DATES("ER-1032", "Custom date range requires both startDate and endDate."),
     INVALID_DATE_RANGE("ER-1033", "Invalid date range provided."),
