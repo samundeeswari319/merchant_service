@@ -28,6 +28,7 @@ import java.time.ZoneId;
 import java.util.*;
 
 @RestController
+@RequestMapping("/api")
 public class MerchantController {
 
     @Autowired
@@ -42,7 +43,7 @@ public class MerchantController {
 
 
     // USER REGISTER FLOW
-    @PostMapping("/api/register_user")
+    @PostMapping("/register_user")
     private APIResponse userRegister(HttpServletRequest request, @RequestBody HashMap<String, Object> register) throws IOException {
         String token = "";
         String app_id = "";
