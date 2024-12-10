@@ -34,7 +34,7 @@ public class Merchant {
     public String user_register_data;
     //private String mobile_number;
     //private String token;
-    private List<String> app_id;
+    private String app_id;
     private String app_name;
     @CreatedDate
     private LocalDateTime created_date;
@@ -57,11 +57,11 @@ public class Merchant {
         this.mid = mid;
     }
 
-    public List<String> getApp_id() {
+    public String getApp_id() {
         return app_id;
     }
 
-    public void setApp_id(List<String> app_id) {
+    public void setApp_id(String app_id) {
         this.app_id = app_id;
     }
 

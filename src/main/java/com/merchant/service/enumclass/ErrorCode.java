@@ -47,7 +47,8 @@ public enum ErrorCode {
     RESOURCE_EMPTY("ER-1035", "Mandatory field is empty"),
     MERCHANT_DUPLICATE("ER-1001", "Merchant with the given ID already exists."),
     INVALID_MERCHANT("ER-1002","Invalid Merchant."),
-    CONFIGURATION_FAILED("ER-1035","Configuration failed and contact admin"),
+    CONFIGURATION_FAILED("ER-1035","Configuration failed and contact to admin"),
+    CONFIGURATION_MISMATCH("ER-1036","Configuration Mismatch"),
     INVALID_VERIFICATION_ID("ER-1004","Invalid verification id.");
 
     public final String code;

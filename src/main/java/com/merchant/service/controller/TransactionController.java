@@ -171,8 +171,7 @@ public class TransactionController {
                     }
                 }
             }catch (Exception exception){
-                response = showError(exception.getMessage(),StatusCode.FAILURE.code);
-                return response;
+                response = showError(exception.getMessage(),StatusCode.INTERNAL_SERVER_ERROR.code);
             }
         }
         return response;

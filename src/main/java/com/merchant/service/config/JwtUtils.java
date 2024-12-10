@@ -5,6 +5,7 @@ import com.merchant.service.common.APIResponse;
 import com.merchant.service.common.ErrorResponses;
 import com.merchant.service.enumclass.ErrorCode;
 import com.merchant.service.model.Merchant;
+import com.merchant.service.model.User;
 import io.jsonwebtoken.*;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,17 +36,20 @@ public class JwtUtils {
         this.jwtParser = Jwts.parser().setSigningKey(secret_key);
     }
 
-    public String createToken(Merchant merchant) {
+    public String createToken(User user) {
         Claims claims = Jwts.claims();
 
         //claims.put("mobile", merchant.getMobile_number().toString());
-        claims.put("user_id", ""+merchant.getId());
+        claims.put("user_id", ""+user.getUser_id());
+        claims.put("mobile", ""+user.user_details.get("mobile_number"));
+        claims.put("app_id", ""+user.app_id);
+        claims.put("mid", ""+user.mid);
 
         Date tokenCreateTime = new Date();
         Date tokenValidity = new Date(tokenCreateTime.getTime() + TimeUnit.MINUTES.toMillis(accessTokenValidity));
         return Jwts.builder()
                 .setClaims(claims)
-                .setIssuer(merchant.getId()+"")
+                .setIssuer(user.getUser_id()+"")
 //                .setExpiration(tokenValidity)
                 .signWith(SignatureAlgorithm.HS256, secret_key)
                 .compact();
@@ -121,5 +125,13 @@ public class JwtUtils {
 
     public String getMobile(Claims claims) {
         return claims.get("mobile").toString();
+    }
+
+    public String getAppId(Claims claims) {
+        return claims.get("app_id").toString();
+    }
+
+    public String getMid(Claims claims) {
+        return claims.get("mid").toString();
     }
 }

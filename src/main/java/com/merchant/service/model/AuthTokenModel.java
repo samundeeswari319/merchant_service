@@ -8,6 +8,8 @@ import lombok.Setter;
 public class AuthTokenModel {
     public String mobile;
     public String user_id;
+    public String app_id;
+    public String mid;
 
     public String getMobile() {
         return mobile;
@@ -25,4 +27,19 @@ public class AuthTokenModel {
         this.user_id = user_id;
     }
 
+    public String getApp_id() {
+        return app_id;
+    }
+
+    public void setApp_id(String app_id) {
+        this.app_id = app_id;
+    }
+
+    public String getMid() {
+        return mid;
+    }
+
+    public void setMid(String mid) {
+        this.mid = mid;
+    }
 }

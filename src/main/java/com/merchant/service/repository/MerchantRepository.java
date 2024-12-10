@@ -12,6 +12,8 @@ public interface MerchantRepository extends MongoRepository<Merchant,String>{
 
     @Query("{ 'mid': ?0 }")
     Merchant findByMid(String mid);
+    @Query("{ 'mid': ?0 ,'app_id': ?1 }")
+    Merchant findByMidAndAppId(String mid,String app_id);
 
     @Query("{ 'mid': ?0 }")
     void deleteByMid(String mid);

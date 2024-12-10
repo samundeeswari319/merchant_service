@@ -12,20 +12,18 @@ import com.merchant.service.enumclass.StatusCode;
 import com.merchant.service.model.*;
 import com.merchant.service.repository.AuthenticationRepository;
 import com.merchant.service.repository.MerchantRepository;
-import com.merchant.service.repository.UserRegisterRepo;
 import com.merchant.service.repository.UserRepository;
-import com.merchant.service.services.MerchantService;
 import com.merchant.service.services.SequenceGeneratorService;
 import com.merchant.service.utils.Utils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @RestController
 @RequestMapping("/api")
@@ -41,13 +39,16 @@ public class MerchantController {
     @Autowired
     AuthenticationRepository authenticationRepository;
 
+    @Autowired
+    JwtUtils jwtUtils;
 
     // USER REGISTER FLOW
-    @PostMapping("/register_user")
+    @PostMapping("/user")
     private APIResponse userRegister(HttpServletRequest request, @RequestBody HashMap<String, Object> register) throws IOException {
         String token = "";
-        String app_id = "";
+        AtomicBoolean isFirebaseToken = new AtomicBoolean(false);
         String authorizationHeader = request.getHeader("Authorization");
+        String appId = request.getHeader("X-AppId");
         APIResponse apiResponse = new APIResponse();
         //String midL = register.get("mid").toString();
         List<String> errors = new ArrayList<>();
@@ -57,12 +58,12 @@ public class MerchantController {
             // Extract token from header
             token = authorizationHeader.substring(7); // Remove "Bearer " prefix
         } else {
-            apiResponse = showError("Invalid Token", HttpStatus.FORBIDDEN.value(), null);
+            apiResponse = showError(null, StatusCode.FORBIDDEN.code, "Invalid Token");
             return apiResponse;
         }
         Authentication authentications = authenticationRepository.findByToken(token);
         if (authentications != null) {
-            Merchant merchant = merchantRepository.findByMid(authentications.merchant_id);
+            Merchant merchant = merchantRepository.findByMidAndAppId(authentications.merchant_id,appId);
             if (merchant != null) {
                 ObjectMapper objectMapper = new ObjectMapper();
                 try {
@@ -70,7 +71,7 @@ public class MerchantController {
                     Map<String, Object> requirements = objectMapper.readValue(merchant.user_register_data, new TypeReference<Map<String, Object>>() {
                     });
                     if (requirements == null || requirements.isEmpty()) {
-                        apiResponse = showError(new ErrorResponses(ErrorCode.CONFIGURATION_FAILED), StatusCode.FAILURE.code, null);
+                        apiResponse = showError(new ErrorResponses(ErrorCode.CONFIGURATION_FAILED), StatusCode.SUCCESS.code, null);
                     } else {
                         requirements.forEach((key, value) -> {
                             Object nameObject = requirements.get(key);
@@ -107,13 +108,19 @@ public class MerchantController {
                                         if (nameMap.get("is_otp") != null) {
                                             boolean isOtp = (boolean) nameMap.get("is_otp");
                                             if (isOtp) {
-                                                user.setSend_otp("0");
-                                                user.setLast_verification_id("0");
+                                                user.otpDetails.setSent_otp("0");
+                                                user.otpDetails.setLast_verification_id("0");
+                                                user.otpDetails.setOtp_type(nameMap.get("param_name").toString());
+                                                user.otpDetails.setOtp_verify("0");
                                             }
+                                        }
+                                        if (key.equals("fcm_token")) {
+                                            db_requirement.put(key, register.get(key));
                                         }
                                     } else {
                                         errors.add(ErrorCode.RESOURCE_NOT_FOUND.message);
                                     }
+
                                 } else {
                                     if (register.containsKey(key)) {
                                         db_requirement.put(key, register.get(key));
@@ -122,47 +129,48 @@ public class MerchantController {
                             }
                         });
                     }
-                    if (register.containsKey("app_id")) {
-                        if (merchant.getApp_id().contains(String.valueOf(register.get("app_id")))) {
-                            app_id = String.valueOf(register.get("app_id"));
-                            user.setApp_id(String.valueOf(register.get("app_id")));
+                    if (appId != null) {
+                        if (merchant.getApp_id().equals(appId)) {
+                            user.setApp_id(appId);
                         } else {
-                            errors.add(ErrorCode.INVALID_ID.message);
+                            apiResponse = showError(null, StatusCode.FAILURE.code, ErrorCode.CONFIGURATION_MISMATCH.message);
+                            return apiResponse;
                         }
                     } else {
-                        errors.add(ErrorCode.RESOURCE_NOT_FOUND.message);
+                        apiResponse = showError(null, StatusCode.FAILURE.code, ErrorCode.CONFIGURATION_MISMATCH.message);
+                        return apiResponse;
                     }
                     if (errors.isEmpty()) {
-                        User userDB = userRepository.findByMobileNumberAndAppId(String.valueOf(register.get("mobile_number")), app_id);
+                        User userDB = userRepository.findByMobileNumberAndAppId(String.valueOf(register.get("mobile_number")), appId);
                         if (userDB != null) {
-                            apiResponse = showError(errors, StatusCode.FAILURE.code, "Already Registered!!");
+                            apiResponse = showError(null, StatusCode.SUCCESS.code, "Already Registered!!");
                         } else {
                             long id = sequenceGeneratorService.generateSequence(Merchant.SEQUENCE_NAME);
                             user.setId(id);
                             user.setMid(merchant.mid);
                             user.setUser_id(id);
                             user.setApp_name(merchant.getApp_name());
-                            //authToken = jwtUtils.createToken(model);
+                            user.user_details = db_requirement;
+                            user.setAuth_token(jwtUtils.createToken(user));
                             LocalDateTime nowIst = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
                             user.setCreated_date(nowIst);
                             user.setUpdated_date(nowIst);
-                            user.user_details = db_requirement;
                             userRepository.save(user);
                             apiResponse.setStatus(true);
                             apiResponse.setData(user);
                             apiResponse.setCode(StatusCode.SUCCESS.code);
                         }
                     } else {
-                        apiResponse = showError(errors, StatusCode.INTERNAL_SERVER_ERROR.code, "Authentication Error");
+                        apiResponse = showError(errors, StatusCode.FAILURE.code, "Invalid Request");
                     }
                 } catch (Exception e) {
-                    apiResponse = showError(errors, StatusCode.INTERNAL_SERVER_ERROR.code, e.getMessage());
+                    apiResponse = showError(null, StatusCode.INTERNAL_SERVER_ERROR.code, e.getMessage());
                 }
             } else {
                 apiResponse = showError(new ErrorResponses(ErrorCode.INVALID_AUTHENTICATION), StatusCode.FORBIDDEN.code, "Merchant Not found");
             }
         } else {
-            apiResponse = showError("Invalid Token", HttpStatus.FORBIDDEN.value(), null);
+            apiResponse = showError(null, StatusCode.FORBIDDEN.code, "Invalid Token");
         }
         return apiResponse;
     }

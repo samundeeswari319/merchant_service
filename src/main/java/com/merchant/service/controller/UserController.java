@@ -142,7 +142,9 @@ public class UserController {
                         apiResponse = showError(new ErrorResponses(ErrorCode.CONFIGURATION_FAILED), "Failure", StatusCode.FAILURE.code);
                     } else {
                         user = userRepository.findByMobileNumberAndMid(loginModel.mobile_number, merchant.mid);
+                        LocalDateTime nowIst = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
                         if (user != null) {
+                            User finalUser = user;
                             requirements.forEach((key, value) -> {
                                 Object nameObject = requirements.get(key);
                                 // Check if it's a Map and cast
@@ -152,12 +154,17 @@ public class UserController {
                                         if (nameMap.get("is_otp") != null) {
                                             boolean isOtp = (boolean) nameMap.get("is_otp");
                                             if (isOtp) {
-                                                VerifyOtpRequest verifyOtpRequest = new VerifyOtpRequest();
-                                                verifyOtpRequest.setOtp("");
-                                                verifyOtpRequest.setMobileNumber(loginModel.mobile_number);
-                                                verifyOtpRequest.setLastVerificationId("");
-                                                verifyOtp(verifyOtpRequest);
-                                                errors.add("SUCCESS");
+                                                    if(!finalUser.otpDetails.getOtp_verify().isEmpty() && finalUser.otpDetails.getOtp_verify().equals("1")) {
+                                                        finalUser.otpDetails.setOtp_verify("0");
+                                                        finalUser.setUpdated_date(nowIst);
+                                                        userRepository.save(finalUser);
+                                                    }
+                                                    VerifyOtpRequest verifyOtpRequest = new VerifyOtpRequest();
+                                                    verifyOtpRequest.setOtp("");
+                                                    verifyOtpRequest.setMobileNumber(loginModel.mobile_number);
+                                                    verifyOtpRequest.setLastVerificationId("");
+                                                    verifyOtp(verifyOtpRequest);
+                                                    errors.add("SUCCESS");
                                             } else {
                                                 list.add("SUCCESS");
                                             }

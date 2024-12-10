@@ -54,6 +54,8 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
             authTokenModel.setMobile(jwtUtil.getMobile(claims));
             authTokenModel.setUser_id(jwtUtil.getUserId(claims));
+            authTokenModel.setApp_id(jwtUtil.getAppId(claims));
+            authTokenModel.setMid(jwtUtil.getMid(claims));
 
             if(claims != null/* & jwtUtil.validateClaims(claims)*/){
                 String email = claims.getSubject();

@@ -1,9 +1,7 @@
 package com.merchant.service.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -18,19 +16,20 @@ import java.util.HashMap;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class User {
     @Transient
     public static final String SEQUENCE_NAME = "merchant_sequence";
 
     @Id
     public long id;
-    public HashMap<String,Object> user_details;
+    public HashMap<String,Object> user_details = new HashMap<>();
     public String mid;
     public long user_id;
     public String app_id;
     public String app_name;
-    private String send_otp;
-    private String last_verification_id;
+    public String auth_token;
+    public OTPDetails otpDetails = new OTPDetails();
     @CreatedDate
     private LocalDateTime created_date;
     @LastModifiedDate
@@ -76,22 +75,6 @@ public class User {
         this.app_name = app_name;
     }
 
-    public String getSend_otp() {
-        return send_otp;
-    }
-
-    public void setSend_otp(String send_otp) {
-        this.send_otp = send_otp;
-    }
-
-    public String getLast_verification_id() {
-        return last_verification_id;
-    }
-
-    public void setLast_verification_id(String last_verification_id) {
-        this.last_verification_id = last_verification_id;
-    }
-
     public long getUser_id() {
         return user_id;
     }
@@ -114,5 +97,63 @@ public class User {
 
     public void setUpdated_date(LocalDateTime updated_date) {
         this.updated_date = updated_date;
+    }
+
+    public String getAuth_token() {
+        return auth_token;
+    }
+
+    public void setAuth_token(String auth_token) {
+        this.auth_token = auth_token;
+    }
+
+    public OTPDetails getOtpDetails() {
+        return otpDetails;
+    }
+
+    public void setOtpDetails(OTPDetails otpDetails) {
+        this.otpDetails = otpDetails;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class OTPDetails {
+        private String sent_otp;
+        private String otp_verify;
+        private String otp_type;
+        private String last_verification_id;
+
+        public String getSent_otp() {
+            return sent_otp;
+        }
+
+        public void setSent_otp(String sent_otp) {
+            this.sent_otp = sent_otp;
+        }
+
+        public String getOtp_verify() {
+            return otp_verify;
+        }
+
+        public void setOtp_verify(String otp_verify) {
+            this.otp_verify = otp_verify;
+        }
+
+        public String getOtp_type() {
+            return otp_type;
+        }
+
+        public void setOtp_type(String otp_type) {
+            this.otp_type = otp_type;
+        }
+
+        public String getLast_verification_id() {
+            return last_verification_id;
+        }
+
+        public void setLast_verification_id(String last_verification_id) {
+            this.last_verification_id = last_verification_id;
+        }
     }
 }
