@@ -14,9 +14,9 @@ public class TransactionRequest {
     private String status;
     private String payment_method;
     private String date_range;
-    private String mid;
+  //  private String mid;
     private String ref_number;
-    private String app_id;
+   // private String app_id;
 
 
     public String getStartDate() {
@@ -59,13 +59,13 @@ public class TransactionRequest {
         this.date_range = date_range;
     }
 
-    public String getMid() {
+    /*public String getMid() {
         return mid;
     }
 
     public void setMid(String mid) {
         this.mid = mid;
-    }
+    }*/
 
     public String getRef_number() {
         return ref_number;
@@ -75,11 +75,11 @@ public class TransactionRequest {
         this.ref_number = ref_number;
     }
 
-    public String getApp_id() {
+  /*  public String getApp_id() {
         return app_id;
     }
 
     public void setApp_id(String app_id) {
         this.app_id = app_id;
-    }
+    }*/
 }

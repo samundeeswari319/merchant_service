@@ -3,13 +3,12 @@ package com.merchant.service.controller;
 import com.merchant.service.common.APIResponse;
 import com.merchant.service.common.ErrorResponses;
 import com.merchant.service.common.TransactionAPIResponse;
+import com.merchant.service.entity.AppManager;
 import com.merchant.service.entity.Authentication;
 import com.merchant.service.enumclass.ErrorCode;
 import com.merchant.service.enumclass.StatusCode;
-import com.merchant.service.model.Sample;
-import com.merchant.service.model.TransactionModel;
-import com.merchant.service.model.TransactionRequest;
-import com.merchant.service.model.TransactionResponseDTO;
+import com.merchant.service.model.*;
+import com.merchant.service.repository.AppManagerRepository;
 import com.merchant.service.repository.AuthenticationRepository;
 import com.merchant.service.repository.TransactionRepo;
 import com.merchant.service.services.SequenceGeneratorService;
@@ -29,7 +28,7 @@ import java.util.stream.Collectors;
 
 
 @RestController
-@RequestMapping("/api")
+//@RequestMapping("/api")
 public class TransactionController {
 
     @Autowired
@@ -41,144 +40,151 @@ public class TransactionController {
     @Autowired
     private AuthenticationRepository authenticationRepository;
 
+    @Autowired
+    AppManagerRepository appManagerRepository;
+
+    @Autowired
+    AuthTokenModel authTokenModel;
+
     private static final int DEFAULT_PAGE_SIZE = 10; //
 
     // NS00049
     @PostMapping("/getTransaction")
-    public TransactionAPIResponse getTransactionData(HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "0") int page, @RequestBody(required = false) TransactionRequest transactionRequest) {
+    public TransactionAPIResponse getTransactionData(@RequestParam(defaultValue = "0") int page, @RequestBody(required = false) TransactionRequest transactionRequest) {
         TransactionAPIResponse response = new TransactionAPIResponse();
-        String token = "";
-        String authorizationHeader = httpServletRequest.getHeader("Authorization");
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            // Extract token from header
-            token= authorizationHeader.substring(7); // Remove "Bearer " prefix
-        } else{
-            response = showError("Invalid Token",HttpStatus.FORBIDDEN.value());
-            return response;
-        }
 
-        if (transactionRequest == null || transactionRequest.getMid() == null || transactionRequest.getMid().isEmpty()) {
-            response = showError(ErrorCode.RESOURCE_NOT_FOUND.message,StatusCode.INTERNAL_SERVER_ERROR.code);
+        if (authTokenModel == null || authTokenModel.getMid() == null || authTokenModel.getMid().isEmpty()) {
+            response = showError(ErrorCode.RESOURCE_NOT_FOUND.message, StatusCode.INTERNAL_SERVER_ERROR.code);
             return response;
-        }else{
+        } else {
             try {
-                Authentication authentications = authenticationRepository.findByMerchantId(transactionRequest.getMid());
-                if (authentications == null) {
-                    response = showError("Authentication Error",StatusCode.FAILURE.code);
-                    return response;
+                AppManager appManager = appManagerRepository.findByTokenAndId(authTokenModel.getMid(), authTokenModel.getApp_id());
+               // Merchant merchant = merchantRepository.findByMidAndAppId(authentications.merchant_id,appId);
+                if (appManager == null) {
+                    response = showError("Authentication Error", StatusCode.FAILURE.code);
                 } else {
-                    if (authentications.token.equals(token)) {
-                        // If date_range is provided, calculate the start and end dates
-                        if (transactionRequest.getDate_range() != null) {
-                            try {
-                                String[] dateRange = DateRangeUtil.calculateDateRange(
-                                        transactionRequest.getDate_range(),
-                                        transactionRequest.getStartDate(),
-                                        transactionRequest.getEndDate()
-                                );
-                                transactionRequest.setStartDate(dateRange[0]);
-                                transactionRequest.setEndDate(dateRange[1]);
-                            } catch (IllegalArgumentException e) {
-                                response.setStatus(false);
-                                response.setMsg(e.getMessage());
-                                response.setData(Collections.emptyList());
-                                return response; // Handle invalid date range
+                    Authentication authentications = authenticationRepository.findByMerchantId(authTokenModel.getMid());
+                    if (authentications == null) {
+                        Utils.fileWrite("Authentication1", authTokenModel.getMid());
+                        response = showError("Authentication Error", StatusCode.FAILURE.code);
+                        return response;
+                    } else {
+                        //if (authentications.token.equals(authTokenModel.token)) {
+                        if (authentications.token.equals(authTokenModel.getToken())) {
+                            // If date_range is provided, calculate the start and end dates
+                            if (transactionRequest.getDate_range() != null) {
+                                try {
+                                    String[] dateRange = DateRangeUtil.calculateDateRange(
+                                            transactionRequest.getDate_range(),
+                                            transactionRequest.getStartDate(),
+                                            transactionRequest.getEndDate()
+                                    );
+                                    transactionRequest.setStartDate(dateRange[0]);
+                                    transactionRequest.setEndDate(dateRange[1]);
+                                } catch (IllegalArgumentException e) {
+                                    response.setStatus(false);
+                                    response.setMsg(e.getMessage());
+                                    response.setData(Collections.emptyList());
+                                    return response; // Handle invalid date range
+                                }
                             }
-                        }
 
-                        Page<TransactionModel> model = transactionRepo.findByUserIdAndOptionalTransactionDate(
-                                transactionRequest.getRef_number(),
-                                transactionRequest.getMid(),
-                                transactionRequest.getApp_id(),
-                                transactionRequest.getStartDate(),
-                                transactionRequest.getEndDate(),
-                                transactionRequest.getStatus(),
-                                transactionRequest.getPayment_method(),
-                                page,
-                                DEFAULT_PAGE_SIZE
-                        );
+                            Page<TransactionModel> model = transactionRepo.findByUserIdAndOptionalTransactionDate(
+                                    transactionRequest.getRef_number(),
+                                    authTokenModel.getMid(),
+                                    authTokenModel.getApp_id(),
+                                    transactionRequest.getStartDate(),
+                                    transactionRequest.getEndDate(),
+                                    transactionRequest.getStatus(),
+                                    transactionRequest.getPayment_method(),
+                                    page,
+                                    DEFAULT_PAGE_SIZE
+                            );
 
-                        if (model != null) {
-                            if (model.isEmpty()) {
-                                response.setData(null);
-                                response.setStatus(false);
-                                response.setMsg("no transactions for the selected criteria.");
-                                response.setCode(StatusCode.SUCCESS.code);
-                                ErrorResponses errorResponse = new ErrorResponses(ErrorCode.NO_TRANSACTIONS_FOUND);
-                                errorResponse.additionalInfo.excepText = String.valueOf(ErrorCode.NO_TRANSACTIONS_FOUND);
-                                response.setError(errorResponse);
-                                return response;
+                            if (model != null) {
+                                if (model.isEmpty()) {
+                                    response.setData(null);
+                                    response.setStatus(false);
+                                    response.setMsg("no transactions for the selected criteria.");
+                                    response.setCode(StatusCode.SUCCESS.code);
+                                    ErrorResponses errorResponse = new ErrorResponses(ErrorCode.NO_TRANSACTIONS_FOUND);
+                                    errorResponse.additionalInfo.excepText = String.valueOf(ErrorCode.NO_TRANSACTIONS_FOUND);
+                                    response.setError(errorResponse);
+                                    return response;
+                                } else {
+                                    List<TransactionResponseDTO> transactionList = model.getContent().stream().map(transaction -> {
+                                        TransactionResponseDTO responseDTO = new TransactionResponseDTO();
+                                        responseDTO.setId(transaction.getId());
+                                        responseDTO.setBbps_type(transaction.getBbps_type());
+                                        responseDTO.setDescription(transaction.getDescription());
+                                        responseDTO.setMid(transaction.getMid());
+                                        responseDTO.setApp_id(transaction.getApp_id());
+                                        // time format
+                                        responseDTO.setReference_number(transaction.getReference_number());
+                                        responseDTO.setTransaction_ref_number(transaction.getTransaction_ref_number());
+                                        responseDTO.setTransfer_type(transaction.getTransfer_type());
+                                        responseDTO.setPlatform_type(transaction.getPlatform_type());
+                                        responseDTO.setPlan_id(transaction.getPlan_id());
+
+                                        TransactionResponseDTO.OperatorDetails operatorDetails = new TransactionResponseDTO.OperatorDetails(
+                                                transaction.operatorDetails.getOperator_id() > 0 ? transaction.operatorDetails.getOperator_id() : null,
+                                                transaction.operatorDetails.getOperator_name(),
+                                                transaction.operatorDetails.getOperator_icon()
+                                        );
+                                        responseDTO.setOperator_details(operatorDetails);
+                                        TransactionResponseDTO.ConsumerDetails consumerDetails = new TransactionResponseDTO.ConsumerDetails(
+                                                transaction.consumerDetails != null ? transaction.consumerDetails.getConsumer_name() : null,
+                                                transaction.paymentDetails != null ? transaction.paymentDetails.getUtr_number() : null,
+                                                transaction.consumerDetails != null ? transaction.consumerDetails.getBill_date() : null,
+                                                transaction.consumerDetails != null ? transaction.consumerDetails.getBill_number() : null,
+                                                transaction.consumerDetails != null ? transaction.consumerDetails.getDue_date() : null
+                                        );
+                                        responseDTO.setConsumerDetails(consumerDetails);
+
+                                        TransactionResponseDTO.PaymentDetails paymentDetails = new TransactionResponseDTO.PaymentDetails(
+                                                transaction.paymentDetails.getAmount(),
+                                                transaction.paymentDetails.getTransaction_date() != null ? transaction.paymentDetails.getTransaction_date().toString() : null,
+                                                transaction.paymentDetails.getCompletion_date() != null ? transaction.paymentDetails.getCompletion_date().toString() : null,
+                                                transaction.paymentDetails.getPayment_method(),
+                                                transaction.paymentDetails.getPayment_status(),
+                                                transaction.paymentDetails.getUtr_number()
+                                        );
+                                        responseDTO.setPaymentDetails(paymentDetails);
+
+                                        return responseDTO;
+                                    }).collect(Collectors.toList());
+
+                                    // Prepare successful response
+                                    response.setData(transactionList);
+                                    response.setStatus(true);
+                                    response.setTotalPages(model.getTotalPages());
+                                    response.setTotalElements(model.getTotalElements());
+                                    response.setPageNumber(model.getPageable().getPageNumber());
+                                    response.setPageData((model.getPageable().getPageNumber() * DEFAULT_PAGE_SIZE) + DEFAULT_PAGE_SIZE);
+                                    response.setMsg("Transaction details fetched successfully.");
+                                    response.setCode(StatusCode.SUCCESS.code);
+                                }
                             } else {
-                                List<TransactionResponseDTO> transactionList = model.getContent().stream().map(transaction -> {
-                                    TransactionResponseDTO responseDTO = new TransactionResponseDTO();
-                                    responseDTO.setId(transaction.getId());
-                                    responseDTO.setBbps_type(transaction.getBbps_type());
-                                    responseDTO.setDescription(transaction.getDescription());
-                                    responseDTO.setMid(transaction.getMid());
-                                    responseDTO.setApp_id(transaction.getApp_id());
-                                    // time format
-                                    responseDTO.setReference_number(transaction.getReference_number());
-                                    responseDTO.setTransaction_ref_number(transaction.getTransaction_ref_number());
-                                    responseDTO.setTransfer_type(transaction.getTransfer_type());
-                                    responseDTO.setPlatform_type(transaction.getPlatform_type());
-                                    responseDTO.setPlan_id(transaction.getPlan_id());
-
-                                    TransactionResponseDTO.OperatorDetails operatorDetails = new TransactionResponseDTO.OperatorDetails(
-                                            transaction.operatorDetails.getOperator_id() > 0 ? transaction.operatorDetails.getOperator_id() : null,
-                                            transaction.operatorDetails.getOperator_name(),
-                                            transaction.operatorDetails.getOperator_icon()
-                                    );
-                                    responseDTO.setOperator_details(operatorDetails);
-                                    TransactionResponseDTO.ConsumerDetails consumerDetails = new TransactionResponseDTO.ConsumerDetails(
-                                            transaction.consumerDetails != null ? transaction.consumerDetails.getConsumer_name() : null,
-                                            transaction.paymentDetails != null ? transaction.paymentDetails.getUtr_number() : null,
-                                            transaction.consumerDetails != null ? transaction.consumerDetails.getBill_date() : null,
-                                            transaction.consumerDetails != null ? transaction.consumerDetails.getBill_number() : null,
-                                            transaction.consumerDetails != null ? transaction.consumerDetails.getDue_date() : null
-                                    );
-                                    responseDTO.setConsumerDetails(consumerDetails);
-
-                                    TransactionResponseDTO.PaymentDetails paymentDetails = new TransactionResponseDTO.PaymentDetails(
-                                            transaction.paymentDetails.getAmount(),
-                                            transaction.paymentDetails.getTransaction_date() != null ? transaction.paymentDetails.getTransaction_date().toString() : null,
-                                            transaction.paymentDetails.getCompletion_date() != null ? transaction.paymentDetails.getCompletion_date().toString() : null,
-                                            transaction.paymentDetails.getPayment_method(),
-                                            transaction.paymentDetails.getPayment_status(),
-                                            transaction.paymentDetails.getUtr_number()
-                                    );
-                                    responseDTO.setPaymentDetails(paymentDetails);
-
-                                    return responseDTO;
-                                }).collect(Collectors.toList());
-
-                                // Prepare successful response
-                                response.setData(transactionList);
-                                response.setStatus(true);
-                                response.setTotalPages(model.getTotalPages());
-                                response.setTotalElements(model.getTotalElements());
-                                response.setPageNumber(model.getPageable().getPageNumber());
-                                response.setPageData((model.getPageable().getPageNumber() * DEFAULT_PAGE_SIZE) + DEFAULT_PAGE_SIZE);
-                                response.setMsg("Transaction details fetched successfully.");
-                                response.setCode(StatusCode.SUCCESS.code);
+                                Utils.setUserNotFoundResponse(response);
+                                return response;
                             }
                         } else {
-                            Utils.setUserNotFoundResponse(response);
+                            Utils.fileWrite("Authentication2", authentications.token + " " + authTokenModel.token);
+                            response = showError("Authentication Error", StatusCode.FAILURE.code);
                             return response;
                         }
-                    } else {
-                        response = showError("Authentication Error",StatusCode.FAILURE.code);
-                        return response;
                     }
                 }
-            }catch (Exception exception){
-                response = showError(exception.getMessage(),StatusCode.INTERNAL_SERVER_ERROR.code);
+            } catch (Exception exception) {
+                response = showError(exception.getMessage(), StatusCode.INTERNAL_SERVER_ERROR.code);
             }
         }
         return response;
     }
+
     // NS00062
-    @PostMapping("/addTransaction")
-    public APIResponse addTransaction(@RequestBody Sample sample){
+    @PostMapping("/api/addTransaction")
+    public APIResponse addTransaction(@RequestBody Sample sample) {
         APIResponse apiResponse = new APIResponse();
         TransactionModel transactionModel = addTransactionDetails(sample);
         apiResponse.setCode(StatusCode.SUCCESS.code);
@@ -229,7 +235,7 @@ public class TransactionController {
         return transactionRepo.save(transactionModel);
     }
 
-    private TransactionAPIResponse showError(String msg,Integer code){
+    private TransactionAPIResponse showError(String msg, Integer code) {
         TransactionAPIResponse response = new TransactionAPIResponse();
         response.setStatus(false);
         response.setCode(code);

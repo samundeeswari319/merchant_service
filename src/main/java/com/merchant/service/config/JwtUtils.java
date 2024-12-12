@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.merchant.service.common.APIResponse;
 import com.merchant.service.common.ErrorResponses;
 import com.merchant.service.enumclass.ErrorCode;
-import com.merchant.service.model.Merchant;
 import com.merchant.service.model.User;
 import io.jsonwebtoken.*;
 import jakarta.servlet.ServletException;
@@ -36,7 +35,7 @@ public class JwtUtils {
         this.jwtParser = Jwts.parser().setSigningKey(secret_key);
     }
 
-    public String createToken(User user) {
+    public String createToken(User user, String token) {
         Claims claims = Jwts.claims();
 
         //claims.put("mobile", merchant.getMobile_number().toString());
@@ -44,6 +43,7 @@ public class JwtUtils {
         claims.put("mobile", ""+user.user_details.get("mobile_number"));
         claims.put("app_id", ""+user.app_id);
         claims.put("mid", ""+user.mid);
+        claims.put("token",""+token);
 
         Date tokenCreateTime = new Date();
         Date tokenValidity = new Date(tokenCreateTime.getTime() + TimeUnit.MINUTES.toMillis(accessTokenValidity));
@@ -133,5 +133,9 @@ public class JwtUtils {
 
     public String getMid(Claims claims) {
         return claims.get("mid").toString();
+    }
+
+    public String getToken(Claims claims) {
+        return claims.get("token").toString();
     }
 }

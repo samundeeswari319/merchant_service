@@ -5,7 +5,9 @@ import com.merchant.service.common.APIResponse;
 import com.merchant.service.entity.Authentication;
 import com.merchant.service.enumclass.ErrorCode;
 import com.merchant.service.enumclass.StatusCode;
+import com.merchant.service.model.AdminData;
 import com.merchant.service.model.Merchant;
+import com.merchant.service.repository.AdminUserRepository;
 import com.merchant.service.repository.MerchantRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,8 @@ public class MerchantService {
 
     @Autowired
     private MerchantRepository merchantRepository;
+    @Autowired
+    private AdminUserRepository adminUserRepository;
 
     @Autowired
     SequenceGeneratorService sequenceGeneratorService;
@@ -62,20 +66,24 @@ public class MerchantService {
     }
 
 
-    public APIResponse updateSelectedField(String json, Merchant merchant, Authentication authentications) {
+    public APIResponse updateAdminData(MultipartFile file) {
         APIResponse apiResponse = new APIResponse();
 
         try {
             // Load JSON data from uploaded file
-            long id = sequenceGeneratorService.generateSequence(Merchant.SEQUENCE_NAME);
-            merchant.setId(id);
-            merchant.setUser_register_data(json);
-            LocalDateTime nowIst = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
-            merchant.setCreated_date(nowIst);
-            merchantRepository.save(merchant);
+            Map<String, Object> jsonData = loadJsonDataFromFile(file);
+            if (jsonData == null) {
+                apiResponse.setStatus(false);
+                apiResponse.setMsg("Failed to read JSON file.");
+                return apiResponse;
+            }
 
+            // Retrieve merchant by ID
+            AdminData adminData = new AdminData();
+            adminData.setAdmin_user_data(new ObjectMapper().writeValueAsString(jsonData));
+            adminUserRepository.save(adminData);
             apiResponse.setStatus(true);
-            apiResponse.setMsg("Merchant requirements updated successfully.");
+            apiResponse.setMsg("Data updated successfully.");
         } catch (Exception e) {
             apiResponse.setStatus(false);
             apiResponse.setMsg("An error occurred: " + e.getMessage());

@@ -10,6 +10,7 @@ public class AuthTokenModel {
     public String user_id;
     public String app_id;
     public String mid;
+    public String token;
 
     public String getMobile() {
         return mobile;
@@ -41,5 +42,13 @@ public class AuthTokenModel {
 
     public void setMid(String mid) {
         this.mid = mid;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }

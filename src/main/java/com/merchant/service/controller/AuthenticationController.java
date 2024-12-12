@@ -106,7 +106,7 @@ public class AuthenticationController {
             apiResponse = showError("Invalid authentication", StatusCode.INTERNAL_SERVER_ERROR.code);
         }
         try {
-            AppManager appManager = appManagerRepository.findByTokenAndNickname(fieldRequestModel.merchant_id, fieldRequestModel.app_id);
+            AppManager appManager = appManagerRepository.findByTokenAndId(fieldRequestModel.merchant_id, fieldRequestModel.app_id);
             if (appManager == null) {
                 apiResponse = showError("Authentication Error", StatusCode.FAILURE.code);
             } else {

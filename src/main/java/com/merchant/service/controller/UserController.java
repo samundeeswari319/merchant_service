@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
+//@RequestMapping("/api")
 public class UserController {
 
     @Autowired
@@ -40,7 +40,10 @@ public class UserController {
     @Autowired
     AuthenticationRepository authenticationRepository;
 
-    @PostMapping("/getUserList")
+    @Autowired
+    AuthTokenModel authTokenModel;
+
+    @PostMapping("/api/getUserList")
     public APIResponse getUserData(HttpServletRequest httpServletRequest, @RequestBody UserFetchRequest request,
                                    @RequestParam(defaultValue = "0") int page,
                                    @RequestParam(defaultValue = "20") int size) {
@@ -114,7 +117,7 @@ public class UserController {
     }
 
 
-    @PostMapping("/login")
+    @PostMapping("/api/login")
     public APIResponse getLogin(HttpServletRequest request, @RequestBody LoginModel loginModel) throws IOException {
         APIResponse apiResponse = new APIResponse();
         String token = "";
@@ -201,13 +204,11 @@ public class UserController {
     @PostMapping("/verify_otp")
     public APIResponse verifyOtp(@RequestBody VerifyOtpRequest verifyOtpRequest) {
         APIResponse response = new APIResponse();
-
         try {
-
-            User user = userRepository.findByMobileNumber(verifyOtpRequest.getMobileNumber());
+            User user = userRepository.findByMobileNumberAndAppId(verifyOtpRequest.getMobileNumber(),authTokenModel.app_id);
             if (user == null) {
                 response.setStatus(false);
-                response.setCode(400);
+                response.setCode(StatusCode.INTERNAL_SERVER_ERROR.code);
                 response.setData(null);
                 response.setError(ErrorCode.INVALID_VERIFICATION_ID.code);
                 response.setMsg("Invalid Authentication");

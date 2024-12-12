@@ -13,11 +13,13 @@ import com.merchant.service.model.*;
 import com.merchant.service.repository.AuthenticationRepository;
 import com.merchant.service.repository.MerchantRepository;
 import com.merchant.service.repository.UserRepository;
+import com.merchant.service.services.MerchantService;
 import com.merchant.service.services.SequenceGeneratorService;
 import com.merchant.service.utils.Utils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -38,6 +40,9 @@ public class MerchantController {
 
     @Autowired
     AuthenticationRepository authenticationRepository;
+
+    @Autowired
+    MerchantService merchantService;
 
     @Autowired
     JwtUtils jwtUtils;
@@ -151,7 +156,7 @@ public class MerchantController {
                             user.setUser_id(id);
                             user.setApp_name(merchant.getApp_name());
                             user.user_details = db_requirement;
-                            user.setAuth_token(jwtUtils.createToken(user));
+                            user.setAuth_token(jwtUtils.createToken(user,token));
                             LocalDateTime nowIst = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
                             user.setCreated_date(nowIst);
                             user.setUpdated_date(nowIst);
@@ -175,6 +180,11 @@ public class MerchantController {
         return apiResponse;
     }
 
+
+    @PostMapping("/admin_data")
+    public APIResponse updateSelectedFields(@RequestParam("jsonFilepath") MultipartFile file) {
+        return merchantService.updateAdminData(file);
+    }
 
     private APIResponse showError(Object data, Integer code, String message) {
         APIResponse apiResponse = new APIResponse();

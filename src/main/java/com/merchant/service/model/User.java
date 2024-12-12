@@ -16,7 +16,6 @@ import java.util.HashMap;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class User {
     @Transient
     public static final String SEQUENCE_NAME = "merchant_sequence";

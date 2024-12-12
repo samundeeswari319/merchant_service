@@ -1,0 +1,157 @@
+{
+  "useridParam": {
+    "paramName": "User ID",
+    "dataType": "NUMERIC",
+    "isOptional": "false",
+    "minLength": "1",
+    "maxLength": "8",
+    "regEx": "^[0-9]{1,8}$",
+    "visibility": "true"
+  },
+  "uniqueIdParam": {
+    "paramName": "Unique ID",
+    "dataType": "NUMERIC",
+    "isOptional": "false",
+    "minLength": "1",
+    "maxLength": "8",
+    "regEx": "^[0-9]{1,8}$",
+    "visibility": "true"
+  },
+  "nameParam": {
+    "paramName": "Name",
+    "dataType": "STRING",
+    "isOptional": "true",
+    "minLength": "1",
+    "maxLength": "8",
+    "regEx": "^[a-zA-Z ]*$",
+    "visibility": "true"
+  },
+  "mobileNumberParam": {
+    "paramName": "MobileNumber",
+    "dataType": "NUMERIC",
+    "isOptional": "false",
+    "minLength": "1",
+    "maxLength": "10",
+    "OTP": "true",
+    "regEx": "^[0-9]{1,10}$",
+    "visibility": "true"
+  },
+  "countryCodeParam": {
+    "paramName": "Country code",
+    "dataType": "NUMERIC",
+    "isOptional": "true",
+    "minLength": "1",
+    "maxLength": "2",
+    "OTP": "true",
+    "regEx": "^[0-9]{1,2}$",
+    "visibility": "true"
+  },
+  "genderParam": {
+    "paramName": "Gender",
+    "dataType": "STRING",
+    "isOptional": "true",
+    "minLength": "1",
+    "maxLength": "5",
+    "OTP": "true",
+    "regEx": "^[a-zA-Z ]*$",
+    "visibility": "true"
+  },
+  "dobParam": {
+    "paramName": "DOB",
+    "dataType": "NUMERIC",
+    "isOptional": "true",
+    "minLength": "1",
+    "maxLength": "2",
+    "OTP": "true",
+    "regEx": "^[0-9]{1,8}$",
+    "visibility": "true"
+  },
+  "emailParam": {
+    "paramName": "Email",
+    "dataType": "STRING",
+    "isOptional": "false",
+    "minLength": "1",
+    "maxLength": "25",
+    "OTP": "true",
+    "regEx": "^[a-zA-Z ]*$",
+    "visibility": "true"
+  },
+  "addressParam": {
+    "paramName": "Address",
+    "dataType": "STRING",
+    "isOptional": "true",
+    "minLength": "1",
+    "maxLength": "25",
+    "regEx": "^[a-zA-Z ]*$",
+    "visibility": "true"
+  },
+  "profileParam": {
+    "paramName": "Profile Image",
+    "dataType": "STRING",
+    "isOptional": "true",
+    "minLength": "1",
+    "maxLength": "25",
+    "regEx": "^[a-zA-Z ]*$",
+    "visibility": "true"
+  },
+  "fcmParam": {
+    "paramName": "FCM Device Token",
+    "dataType": "STRING",
+    "isOptional": "true",
+    "minLength": "1",
+    "maxLength": "25",
+    "regEx": "^[a-zA-Z ]*$",
+    "visibility": "true"
+  },
+  "kycParam": {
+    "paramInfo": [
+      {
+        "paramName": "Aadhaar Number",
+        "dataType": "NUMERIC",
+        "isOptional": "true",
+        "minLength": "1",
+        "maxLength": "8",
+        "regEx": "^[0-9]{1,8}$",
+        "visibility": "true"
+      },
+      {
+        "paramName": "PAN",
+        "dataType": "NUMERIC",
+        "isOptional": "true",
+        "minLength": "8",
+        "maxLength": "8",
+        "regEx": "^[0-9]{8}$",
+        "visibility": "true"
+      },
+      {
+        "paramName": "Driving Licence",
+        "dataType": "NUMERIC",
+        "isOptional": "true",
+        "minLength": "8",
+        "maxLength": "8",
+        "regEx": "^[0-9]{8}$",
+        "visibility": "true"
+      },
+      {
+        "paramName": "Passport",
+        "dataType": "NUMERIC",
+        "isOptional": "true",
+        "minLength": "8",
+        "maxLength": "8",
+        "regEx": "^[0-9]{8}$",
+        "visibility": "true"
+      },
+      {
+        "paramName": "Voter ID",
+        "dataType": "NUMERIC",
+        "isOptional": "true",
+        "minLength": "8",
+        "maxLength": "8",
+        "regEx": "^[0-9]{8}$",
+        "visibility": "true"
+      }
+
+    ]
+  }
+}
+
