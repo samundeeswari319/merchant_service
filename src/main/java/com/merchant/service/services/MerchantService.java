@@ -1,6 +1,9 @@
 package com.merchant.service.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.merchant.service.common.APIResponse;
 import com.merchant.service.entity.Authentication;
 import com.merchant.service.enumclass.ErrorCode;
@@ -9,14 +12,17 @@ import com.merchant.service.model.AdminData;
 import com.merchant.service.model.Merchant;
 import com.merchant.service.repository.AdminUserRepository;
 import com.merchant.service.repository.MerchantRepository;
+import com.merchant.service.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.merchant.service.utils.Utils.loadJsonDataFromFile;
 
@@ -77,11 +83,18 @@ public class MerchantService {
                 apiResponse.setMsg("Failed to read JSON file.");
                 return apiResponse;
             }
-
-            // Retrieve merchant by ID
-            AdminData adminData = new AdminData();
-            adminData.setAdmin_user_data(new ObjectMapper().writeValueAsString(jsonData));
-            adminUserRepository.save(adminData);
+            AdminData adminData = adminUserRepository.findByDataId("0");
+            if (adminData == null) {
+                AdminData adminDatas = new AdminData();
+                long id = sequenceGeneratorService.generateSequence(Merchant.SEQUENCE_NAME);
+                adminDatas.setId(id);
+                adminDatas.setData_id("0");
+                adminDatas.setAdmin_user_data(new ObjectMapper().writeValueAsString(jsonData));
+                adminUserRepository.save(adminDatas);
+            }else{
+                adminData.setAdmin_user_data(new ObjectMapper().writeValueAsString(jsonData));
+                adminUserRepository.save(adminData);
+            }
             apiResponse.setStatus(true);
             apiResponse.setMsg("Data updated successfully.");
         } catch (Exception e) {
@@ -89,6 +102,46 @@ public class MerchantService {
             apiResponse.setMsg("An error occurred: " + e.getMessage());
         }
 
+        return apiResponse;
+    }
+
+    public APIResponse updateFields(HashMap<String, Object> register){
+        APIResponse apiResponse = new APIResponse();
+        AdminData adminData = adminUserRepository.findByDataId("0");
+        if (adminData != null) {
+            try {
+                // Deserialize existing JSON
+                Map<String, Object> existingData = new ObjectMapper()
+                        .readValue(adminData.getAdmin_user_data(), new TypeReference<Map<String, Object>>() {});
+
+               // Utils.fileWrite("existingData",existingData.toString());
+
+                // Merge with incoming data
+                existingData.putAll(register);
+                //Utils.fileWrite("existingData2",existingData.toString());
+
+
+                // Serialize and save
+                String updatedJson = new ObjectMapper().writeValueAsString(existingData);
+               // Utils.fileWrite("Updated JSON",updatedJson);
+
+                adminData.setAdmin_user_data(updatedJson);
+                adminUserRepository.save(adminData);
+                //Utils.fileWrite("Updated JSON",new Gson().toJson(adminData));
+
+                apiResponse.setStatus(true);
+                apiResponse.setMsg("Data updated successfully.");
+            } catch (JsonProcessingException e) {
+                apiResponse.setStatus(false);
+                apiResponse.setMsg("An error occurred: " + e.getMessage());
+            } /*catch (IOException e) {
+                apiResponse.setStatus(false);
+                apiResponse.setMsg("An error occurred: " + e.getMessage());
+            }*/
+        } else {
+            apiResponse.setStatus(false);
+            apiResponse.setMsg("Admin data not found.");
+        }
         return apiResponse;
     }
 
@@ -169,7 +222,4 @@ public class MerchantService {
 
         return response;
     }
-
-
-
 }

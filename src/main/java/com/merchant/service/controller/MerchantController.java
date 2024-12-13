@@ -1,6 +1,7 @@
 package com.merchant.service.controller;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.merchant.service.common.APIResponse;
@@ -10,6 +11,7 @@ import com.merchant.service.entity.Authentication;
 import com.merchant.service.enumclass.ErrorCode;
 import com.merchant.service.enumclass.StatusCode;
 import com.merchant.service.model.*;
+import com.merchant.service.repository.AdminUserRepository;
 import com.merchant.service.repository.AuthenticationRepository;
 import com.merchant.service.repository.MerchantRepository;
 import com.merchant.service.repository.UserRepository;
@@ -47,11 +49,13 @@ public class MerchantController {
     @Autowired
     JwtUtils jwtUtils;
 
+    @Autowired
+    private AdminUserRepository adminUserRepository;
+
     // USER REGISTER FLOW
     @PostMapping("/user")
     private APIResponse userRegister(HttpServletRequest request, @RequestBody HashMap<String, Object> register) throws IOException {
         String token = "";
-        AtomicBoolean isFirebaseToken = new AtomicBoolean(false);
         String authorizationHeader = request.getHeader("Authorization");
         String appId = request.getHeader("X-AppId");
         APIResponse apiResponse = new APIResponse();
@@ -184,6 +188,13 @@ public class MerchantController {
     @PostMapping("/admin_data")
     public APIResponse updateSelectedFields(@RequestParam("jsonFilepath") MultipartFile file) {
         return merchantService.updateAdminData(file);
+    }
+
+
+    @PostMapping("/add_admin_data")
+    public APIResponse updateSelectedFields(@RequestBody HashMap<String, Object> register) {
+        APIResponse apiResponse = new APIResponse();
+        return merchantService.updateFields(register);
     }
 
     private APIResponse showError(Object data, Integer code, String message) {

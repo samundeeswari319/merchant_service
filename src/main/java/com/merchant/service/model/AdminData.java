@@ -12,7 +12,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document("admin_user_data")
+@Document("admin_register_user_data")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -26,6 +26,7 @@ public class AdminData {
     @JsonSerialize(using = JsonRequirementsSerializer.class)
     @JsonDeserialize(using = JsonRequirementsDeserializer.class)
     public String admin_user_data;
+    public String data_id;
 
     public long getId() {
         return id;
@@ -41,5 +42,13 @@ public class AdminData {
 
     public void setAdmin_user_data(String admin_user_data) {
         this.admin_user_data = admin_user_data;
+    }
+
+    public String getData_id() {
+        return data_id;
+    }
+
+    public void setData_id(String data_id) {
+        this.data_id = data_id;
     }
 }

@@ -1,114 +1,114 @@
 {
-  "useridParam": {
+  "userid": {
     "paramName": "User ID",
     "dataType": "NUMERIC",
-    "isOptional": "false",
+    "is_mandatory": true,
     "minLength": "1",
     "maxLength": "8",
     "regEx": "^[0-9]{1,8}$",
     "visibility": "true"
   },
-  "uniqueIdParam": {
+  "uniqueId": {
     "paramName": "Unique ID",
     "dataType": "NUMERIC",
-    "isOptional": "false",
+    "is_mandatory": true,
     "minLength": "1",
     "maxLength": "8",
     "regEx": "^[0-9]{1,8}$",
     "visibility": "true"
   },
-  "nameParam": {
+  "name": {
     "paramName": "Name",
     "dataType": "STRING",
-    "isOptional": "true",
+    "is_mandatory": true,
     "minLength": "1",
     "maxLength": "8",
     "regEx": "^[a-zA-Z ]*$",
     "visibility": "true"
   },
-  "mobileNumberParam": {
+  "mobileNumber": {
     "paramName": "MobileNumber",
     "dataType": "NUMERIC",
-    "isOptional": "false",
+    "is_mandatory": true,
     "minLength": "1",
     "maxLength": "10",
     "OTP": "true",
     "regEx": "^[0-9]{1,10}$",
     "visibility": "true"
   },
-  "countryCodeParam": {
+  "countryCode": {
     "paramName": "Country code",
     "dataType": "NUMERIC",
-    "isOptional": "true",
+    "is_mandatory": true,
     "minLength": "1",
     "maxLength": "2",
     "OTP": "true",
     "regEx": "^[0-9]{1,2}$",
     "visibility": "true"
   },
-  "genderParam": {
+  "gender": {
     "paramName": "Gender",
     "dataType": "STRING",
-    "isOptional": "true",
+    "is_mandatory": true,
     "minLength": "1",
     "maxLength": "5",
     "OTP": "true",
     "regEx": "^[a-zA-Z ]*$",
     "visibility": "true"
   },
-  "dobParam": {
+  "dob": {
     "paramName": "DOB",
     "dataType": "NUMERIC",
-    "isOptional": "true",
+    "is_mandatory": true,
     "minLength": "1",
     "maxLength": "2",
     "OTP": "true",
     "regEx": "^[0-9]{1,8}$",
     "visibility": "true"
   },
-  "emailParam": {
+  "email": {
     "paramName": "Email",
     "dataType": "STRING",
-    "isOptional": "false",
+    "is_mandatory": true,
     "minLength": "1",
     "maxLength": "25",
     "OTP": "true",
     "regEx": "^[a-zA-Z ]*$",
     "visibility": "true"
   },
-  "addressParam": {
+  "address": {
     "paramName": "Address",
     "dataType": "STRING",
-    "isOptional": "true",
+    "is_mandatory": true,
     "minLength": "1",
     "maxLength": "25",
     "regEx": "^[a-zA-Z ]*$",
     "visibility": "true"
   },
-  "profileParam": {
+  "profile": {
     "paramName": "Profile Image",
     "dataType": "STRING",
-    "isOptional": "true",
+    "is_mandatory": true,
     "minLength": "1",
     "maxLength": "25",
     "regEx": "^[a-zA-Z ]*$",
     "visibility": "true"
   },
-  "fcmParam": {
+  "fcm": {
     "paramName": "FCM Device Token",
     "dataType": "STRING",
-    "isOptional": "true",
+    "is_mandatory": true,
     "minLength": "1",
     "maxLength": "25",
     "regEx": "^[a-zA-Z ]*$",
     "visibility": "true"
   },
-  "kycParam": {
+  "kyc": {
     "paramInfo": [
       {
         "paramName": "Aadhaar Number",
         "dataType": "NUMERIC",
-        "isOptional": "true",
+        "is_mandatory": true,
         "minLength": "1",
         "maxLength": "8",
         "regEx": "^[0-9]{1,8}$",
@@ -117,7 +117,7 @@
       {
         "paramName": "PAN",
         "dataType": "NUMERIC",
-        "isOptional": "true",
+        "is_mandatory": true,
         "minLength": "8",
         "maxLength": "8",
         "regEx": "^[0-9]{8}$",
@@ -126,7 +126,7 @@
       {
         "paramName": "Driving Licence",
         "dataType": "NUMERIC",
-        "isOptional": "true",
+        "is_mandatory": true,
         "minLength": "8",
         "maxLength": "8",
         "regEx": "^[0-9]{8}$",
@@ -135,7 +135,7 @@
       {
         "paramName": "Passport",
         "dataType": "NUMERIC",
-        "isOptional": "true",
+        "is_mandatory": true,
         "minLength": "8",
         "maxLength": "8",
         "regEx": "^[0-9]{8}$",
@@ -144,13 +144,12 @@
       {
         "paramName": "Voter ID",
         "dataType": "NUMERIC",
-        "isOptional": "true",
+        "is_mandatory": true,
         "minLength": "8",
         "maxLength": "8",
         "regEx": "^[0-9]{8}$",
         "visibility": "true"
       }
-
     ]
   }
 }
